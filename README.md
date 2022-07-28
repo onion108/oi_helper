@@ -23,3 +23,16 @@ int main() {
 }
 ```
 You can see that `oi_helper` included some header files that OIers may want to use, and also generates the `MAXN` constant, which is very useful when doing DP or other algorithms that needs arrays.
+
+## Installation
+
+If you want to install it easily, just type:
+```
+cargo install oi_helper
+```
+
+## Build
+If you are interested in building it by yourself, then type:
+```
+cargo build
+```
