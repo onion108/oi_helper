@@ -118,7 +118,6 @@ impl Workspace {
             String::from(name) + "." + self.config["cc_default_extension"].to_string().as_str()
         };
         let executable_name = real_name.split('.').collect::<Vec<&str>>()[0];
-        println!("{:?}", self.parse_args());
         match Command::new(self.config["cc_compiler"].to_string().as_str())
             .args(self.parse_args())
             .arg(format!("-o"))
