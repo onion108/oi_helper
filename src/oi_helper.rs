@@ -37,12 +37,12 @@ impl OIHelper {
                 workspace.save_config(Path::new("./oi_ws.json"));
             },
             OIHelperCommands::Create { name } => {
-                let workspace = Workspace::from_file(Path::new("./oi_ws.json"));
+                let mut workspace = Workspace::from_file(Path::new("./oi_ws.json"));
                 workspace.check_version();
                 workspace.create_cpp(name);
             },
             OIHelperCommands::Run { name } => {
-                let workspace = Workspace::from_file(Path::new("./oi_ws.json"));
+                let mut workspace = Workspace::from_file(Path::new("./oi_ws.json"));
                 workspace.check_version();
                 workspace.run_cpp(name);
             },
