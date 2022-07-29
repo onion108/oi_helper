@@ -193,7 +193,7 @@ impl Workspace {
     }
 
     /// Create a new C++ source file.
-    pub fn create_cpp(&self, name: &str, template: &str) {
+    pub fn create_cpp(&self, name: &str, template: &str, maxn: &str, debug_kit: bool) {
         let real_name = if name.ends_with(".cpp") && name.ends_with(".cc") && name.ends_with(".cxx")
         {
             String::from(name)
@@ -203,18 +203,47 @@ impl Workspace {
         let mut file =
             File::create(Path::new(&real_name)).expect("error: cannot create cpp file. stopped. ");
         let template_scheme_obj = self.config["cc_template"].to_string();
+        let mut buffer = String::new();
         let template_scheme = template_scheme_obj.as_str();
         let template = match template {
             "dp" => match template_scheme {
                 "temp1" => resource::CPP_DP_TEMPLATE_0.trim_start(),
                 "temp0" | _ => resource::CPP_DP_TEMPLATE_1.trim_end(),
             }
-            "default" | _ => match template_scheme {
+            "default" => match template_scheme {
                 "temp1" => resource::CPP_TEMPLATE_1.trim_start(),
                 "temp0" | _ => resource::CPP_TEMPLATE_0.trim_start(),
             }
+            _ => {
+                if let Ok(mut f) = File::open(&Path::new(template)) {
+                    match f.read_to_string(&mut buffer) {
+                        Ok(_) => {},
+                        Err(err) => {
+                            eprintln!("Failed to read template file {} due to error: {}", template, err);
+                            exit(-1);
+                        },
+                    }
+                    buffer.as_str()
+                } else {
+                    eprintln!("Invalid template: {}", template);
+                    eprintln!("{}", "Usable tempaltes: dp, default, [path/to/template]".bold().yellow());
+                    exit(-1);
+                }
+            }
         };
-        file.write_all(template.replace("{##}", name).as_bytes())
+        file.write_all(
+        template
+            .replace("{##}", name)
+            .replace("{#maxn_value#}", maxn)
+            .replace("{#debug_kit#}", {
+                if debug_kit {
+                    resource::CPP_TEMPLATE_DEBUG_KIT
+                } else {
+                    ""
+                }
+            })
+            .as_bytes()
+        )
             .unwrap();
     }
 

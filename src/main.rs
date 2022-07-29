@@ -59,6 +59,14 @@ enum OIHelperCommands {
         /// The template name. Defaults to default.
         #[clap(long, default_value="default")]
         template: String,
+
+        /// The value of the `MAXN` constant.
+        #[clap(long, default_value="1e5+114514")]
+        maxn: String,
+
+        /// Determine if enable the debug kit.
+        #[clap(long)]
+        debug_kit: bool,
     },
 
     /// Run the program.

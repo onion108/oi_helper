@@ -1,5 +1,21 @@
 //! Some resource strings.
 
+
+/// DEBUG Kits
+pub static CPP_TEMPLATE_DEBUG_KIT: &'static str = r"
+
+/* Debug Kit Start */
+
+#ifdef __DEBUG__
+#define debug_do(__b) __b
+#else
+#define debug_do(__b)
+#endif
+
+/* Debug Kit End */
+
+";
+
 /// The default C++ template.
 pub static CPP_TEMPLATE_0: &'static str = r"
 // {##}
@@ -13,8 +29,9 @@ pub static CPP_TEMPLATE_0: &'static str = r"
 #include <stack>
 #include <queue>
 using namespace std;
+{#debug_kit#}
 
-static const int MAXN = 1e5+114514;
+static const int MAXN = {#maxn_value#};
 
 int main() {
     return 0;
@@ -34,8 +51,9 @@ pub static CPP_TEMPLATE_1: &'static str = r"
 using std::cin;
 using std::cout;
 using std::endl;
+{#debug_kit#}
 
-static const int MAXN = 1e5+114514;
+static const int MAXN = {#maxn_value#};
 
 int main() {
 }
@@ -55,8 +73,9 @@ pub static CPP_DP_TEMPLATE_0: &'static str = r"
 #include <stack>
 #include <queue>
 using namespace std;
+{#debug_kit#}
 
-static const int MAXN = 1e5+114514;
+static const int MAXN = {#maxn_value#};
 int dp[MAXN];
 
 int main() {
@@ -77,8 +96,9 @@ pub static CPP_DP_TEMPLATE_1: &'static str = r"
 using std::cin;
 using std::cout;
 using std::endl;
+{#debug_kit#}
 
-static const int MAXN = 1e5+114514;
+static const int MAXN = {#maxn_value#};
 int dp[MAXN];
 
 int main() {
