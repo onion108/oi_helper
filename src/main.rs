@@ -57,6 +57,9 @@ enum OIHelperCommands {
 
     /// Display the info of current workspace.
     Info,
+
+    /// Update the workspace to the newest oi_helper version.
+    Update,
 }
 
 /// A helper for C++ competive programmers (a.k.a. OIers).

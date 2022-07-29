@@ -19,16 +19,21 @@ pub struct Workspace {
 
 #[allow(dead_code)]
 impl Workspace {
-    /// Create from path.
-    pub fn create(path: &PathBuf) -> Self {
-        let default_workspace_file = object! {
+
+    fn get_default_config() -> JsonValue {
+        object! {
             "initialzed": "true",
             "oi_helper_version": crate::VERSION,
             "cc_flags": "-std=c++11 -O2 -Wall -xc++ ",
             "cc_template": "temp0",
             "cc_default_extension": "cc",
-            "cc_compiler": "g++",
-        };
+            "cc_compiler": "g++", 
+        }
+    }
+
+    /// Create from path.
+    pub fn create(path: &PathBuf) -> Self {
+        let default_workspace_file = Self::get_default_config();
         let mut cfg_path = path.clone();
 
         cfg_path.push("oi_ws.json");
@@ -80,6 +85,7 @@ impl Workspace {
             let version = self.config["oi_helper_version"].clone();
             if version.to_string() != crate::VERSION {
                 eprintln!("{} The version of oi_helper is {} but the workspace version is {}. Load it anyway? [Y/{}]", "[WARNING]".bold().yellow(), crate::VERSION.bold().green(), version.to_string().bold().red(), "N".bold().blue());
+                eprintln!("{}", "[HINT] You can use `oi_helper update` to update your workspace to the newest version safely.".bold().yellow());
                 let mut u_c = String::new();
                 stdin().read_line(&mut u_c).unwrap();
                 if u_c.trim().to_uppercase() == "Y" {
@@ -91,10 +97,11 @@ impl Workspace {
                 }
             }
         } else {
-            panic!(
+            eprintln!(
                 "{} The workspace config is broken or not in the correct format. Stopped.",
                 "[ERROR]".red().bold()
             );
+            exit(-1);
         }
     }
 
@@ -228,6 +235,19 @@ impl Workspace {
         }
         if self.config.has_key("cc_compiler") {
             println!("Current C++ Compiler (cc_compiler): {}", self.config["cc_compiler"].to_string());
+        }
+    }
+
+    /// Update the workspace file to the newest version.
+    pub fn update(&mut self) {
+        if self.config.has_key("oi_helper_version") {
+            self.config["oi_helper_version"] = JsonValue::String(String::from(crate::VERSION));
+        }
+        let default = &Self::get_default_config();
+        for i in default.entries().map(|x| x.0) {
+            if !self.config.has_key(i) {
+                self.config[i] = default[i].clone();
+            }
         }
     }
 }
