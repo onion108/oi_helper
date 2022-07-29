@@ -75,7 +75,7 @@ impl Workspace {
     }
 
     /// Check the version of the workspace.
-    pub fn check_version(&mut self) {
+    pub fn check_version(&mut self, p: &str) {
         if self.config.has_key("oi_helper_version") {
             let version = self.config["oi_helper_version"].clone();
             if version.to_string() != crate::VERSION {
@@ -85,6 +85,7 @@ impl Workspace {
                 if u_c.trim().to_uppercase() == "Y" {
                     self.config["oi_helper_version"] =
                         JsonValue::String(String::from(crate::VERSION));
+                    self.save_config(Path::new(p));
                 } else {
                     exit(-1);
                 }

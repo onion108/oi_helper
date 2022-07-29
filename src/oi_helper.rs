@@ -29,7 +29,7 @@ impl OIHelper {
             OIHelperCommands::Checkver { path } => {
                 let mut cfg_path = path.clone();
                 cfg_path.push("oi_ws.json");
-                Workspace::from_file(&cfg_path.as_path()).check_version();
+                Workspace::from_file(&cfg_path.as_path()).check_version("./oi_ws.json");
             },
             OIHelperCommands::Config { key, value } => {
                 let mut workspace = Workspace::from_file(Path::new("./oi_ws.json"));
@@ -38,12 +38,12 @@ impl OIHelper {
             },
             OIHelperCommands::Create { name , template} => {
                 let mut workspace = Workspace::from_file(Path::new("./oi_ws.json"));
-                workspace.check_version();
+                workspace.check_version("./oi_ws.json");
                 workspace.create_cpp(name, template);
             },
             OIHelperCommands::Run { name } => {
                 let mut workspace = Workspace::from_file(Path::new("./oi_ws.json"));
-                workspace.check_version();
+                workspace.check_version("./oi_ws.json");
                 workspace.run_cpp(name);
             },
             OIHelperCommands::Info => {
