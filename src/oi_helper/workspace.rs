@@ -15,25 +15,95 @@ use super::resource;
 /// The workspace model.
 pub struct Workspace {
     config: JsonValue,
+    global_config: Option<String>,
 }
 
 #[allow(dead_code)]
 impl Workspace {
 
-    fn get_default_config() -> JsonValue {
-        object! {
+    fn get_default_config(&self) -> JsonValue {
+
+        // The default configuration, if the configuration doesn't exist.
+        let builtin_default = object! {
             "initialzed": "true",
             "oi_helper_version": crate::VERSION,
             "cc_flags": "-std=c++11 -O2 -Wall -xc++ ",
             "cc_template": "temp0",
             "cc_default_extension": "cc",
             "cc_compiler": "g++", 
+        };
+
+        // If the configuration directory exists
+        if let Some(p) = &self.global_config {
+
+            // Construct a path to the global.json
+            let pth = Path::new(&p);
+            let mut pth_buf = pth.to_path_buf();
+            pth_buf.push("global.json");
+
+            // Check if the file exists
+            if !pth_buf.as_path().exists() {
+
+                // If not, create a new file
+                let mut f = File::create(&pth_buf.as_path()).unwrap();
+                f.write_all(builtin_default.dump().as_bytes()).unwrap();
+                builtin_default
+
+            } else {
+
+                // Otherwise, read the file OR update the default file.
+                let mut f = File::open(&pth_buf.as_path()).unwrap();
+                let mut buffer = String::new();
+                f.read_to_string(&mut buffer).unwrap();
+                let ccfg = json::parse(&buffer).unwrap();
+
+                // Check the version
+                if ccfg["oi_helper_version"].to_string() != crate::VERSION {
+
+                    // The global.json is from an older version
+                    let mut mccfg = ccfg.clone();
+
+                    // Update keys that don't exist in the older version's configuration file
+                    for i in builtin_default.entries().map(|x| x.0) {
+                        if !mccfg.has_key(i) {
+                            mccfg[i] = builtin_default[i].clone();
+                        }
+                    }
+
+                    let mut f = File::create(&pth_buf.as_path()).unwrap();
+                    f.write_all(mccfg.dump().as_bytes()).unwrap();
+                    mccfg
+                } else {
+                    // If it's already the newest, just return what we read
+                    ccfg
+                }
+            }
+
+        } else {
+            builtin_default
+        }
+    }
+
+    /// Edit the global configuration file.
+    pub fn set_g_config(&mut self, key: &str, value: &str) {
+        if let Some(p) = &self.global_config {
+            let pth = Path::new(p);
+            let mut pth_buf = pth.to_path_buf();
+            pth_buf.push("global.json");
+            let mut cfg = self.get_default_config();
+            cfg[key] = JsonValue::String(String::from(value));
+            let mut f = File::create(&pth_buf.as_path()).unwrap();
+            f.write_all(cfg.dump().as_bytes()).unwrap();
+        } else {
+            eprintln!("{}", "[Error] Cannot edit the global configuration file.".bold().red());
+            exit(-1);
         }
     }
 
     /// Create from path.
-    pub fn create(path: &PathBuf) -> Self {
-        let default_workspace_file = Self::get_default_config();
+    pub fn create(path: &PathBuf, global_cfg: &Option<String>) -> Self {
+        let result = Self { config: JsonValue::Null, global_config: global_cfg.clone() };
+        let default_workspace_file = result.get_default_config();
         let mut cfg_path = path.clone();
 
         cfg_path.push("oi_ws.json");
@@ -58,24 +128,26 @@ impl Workspace {
                 exit(-1);
             }
         }
-        Self::from_json(default_workspace_file)
+        Self::from_json(default_workspace_file, global_cfg)
     }
 
     /// Initialize from json.
-    pub fn from_json(json: JsonValue) -> Self {
+    pub fn from_json(json: JsonValue, global_cfg: &Option<String>) -> Self {
         Self {
             config: json.clone(),
+            global_config: global_cfg.clone(),
         }
     }
 
     /// Initialize from file.
-    pub fn from_file(path: &Path) -> Self {
+    pub fn from_file(path: &Path, global_cfg: &Option<String>) -> Self {
         let mut file = File::open(path).expect("cannot find workspace config. stopped. \nHint: Have you executed `oi_helper init` or are you in the root directory of the workspace?");
         let mut file_content = String::new();
         file.read_to_string(&mut file_content)
             .expect("cannot read from the workspace configuration file. stopped.");
         return Self::from_json(
             json::parse(&file_content).expect("the oi_ws.json is not a valid json file. stopped."),
+            global_cfg,
         );
     }
 
@@ -243,7 +315,7 @@ impl Workspace {
         if self.config.has_key("oi_helper_version") {
             self.config["oi_helper_version"] = JsonValue::String(String::from(crate::VERSION));
         }
-        let default = &Self::get_default_config();
+        let default = &self.get_default_config();
         for i in default.entries().map(|x| x.0) {
             if !self.config.has_key(i) {
                 self.config[i] = default[i].clone();

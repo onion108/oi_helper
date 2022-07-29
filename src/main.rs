@@ -37,6 +37,19 @@ enum OIHelperCommands {
         value: String,
     },
 
+    /// Edit the global configuration, which will be used when initializing workspace or updating oi_ws.json.
+    GlobalConfig {
+        /// The key of an option.
+        /// E.g. `cc_flags`
+        #[clap()]
+        key: String,
+
+        /// The value of an option.
+        /// E.g. `-std=c++17 -xc++ -O1 -Wall`
+        #[clap()]
+        value: String,
+    },
+
     /// Create a C++ source file in the workspace.
     Create {
         /// The name of the source file, the extension isn't neccessary.
@@ -75,5 +88,7 @@ pub struct OIHelperCli {
 
 fn main() {
     let args = OIHelperCli::parse();
-    oi_helper::OIHelper::new(args).run();
+    let mut app = oi_helper::OIHelper::new(args);
+    app.config();
+    app.run();
 }
