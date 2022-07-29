@@ -1,6 +1,6 @@
 [package]
 name = "oi_helper"
-version = "0.0.4"
+version = "0.0.5"
 edition = "2021"
 authors = ["27Onion <zzy20080201@qq.com>"]
 license = "GPL-2.0"
