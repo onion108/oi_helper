@@ -210,4 +210,23 @@ impl Workspace {
         }
         result
     }
+
+    /// Display the info of a workspace.
+    pub fn display_info(&self) {
+        if self.config.has_key("oi_helper_version") {
+            println!("Current Workspace's OI Helper Version (oi_helper_version): {}", self.config["oi_helper_version"].to_string());
+        }
+        if self.config.has_key("cc_flags") {
+            println!("Current C++ Compiler Flags (cc_flags): {}", self.config["cc_flags"].to_string());
+        }
+        if self.config.has_key("cc_template") {
+            println!("Current Template Theme (cc_template): {}", self.config["cc_template"].to_string());
+        }
+        if self.config.has_key("cc_default_extension") {
+            println!("Current C++ Extension (cc_default_extension): {}", self.config["cc_default_extension"].to_string());
+        }
+        if self.config.has_key("cc_compiler") {
+            println!("Current C++ Compiler (cc_compiler): {}", self.config["cc_compiler"].to_string());
+        }
+    }
 }

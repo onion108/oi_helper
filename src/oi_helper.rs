@@ -46,6 +46,10 @@ impl OIHelper {
                 workspace.check_version();
                 workspace.run_cpp(name);
             },
+            OIHelperCommands::Info => {
+                let workspace = Workspace::from_file(Path::new("./oi_ws.json"));
+                workspace.display_info();
+            }
         }
     }
 }

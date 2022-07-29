@@ -54,6 +54,9 @@ enum OIHelperCommands {
         #[clap()]
         name: String,
     },
+
+    /// Display the info of current workspace.
+    Info,
 }
 
 /// A helper for C++ competive programmers (a.k.a. OIers).
