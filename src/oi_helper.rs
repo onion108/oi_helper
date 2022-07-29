@@ -36,10 +36,10 @@ impl OIHelper {
                 workspace.set_config(key, value);
                 workspace.save_config(Path::new("./oi_ws.json"));
             },
-            OIHelperCommands::Create { name } => {
+            OIHelperCommands::Create { name , template} => {
                 let mut workspace = Workspace::from_file(Path::new("./oi_ws.json"));
                 workspace.check_version();
-                workspace.create_cpp(name);
+                workspace.create_cpp(name, template);
             },
             OIHelperCommands::Run { name } => {
                 let mut workspace = Workspace::from_file(Path::new("./oi_ws.json"));

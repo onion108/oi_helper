@@ -26,7 +26,7 @@ enum OIHelperCommands {
 
     /// Config current workspace.
     Config {
-        /// The key of an option.
+        /// The key of an option.  
         /// E.g. `cc_flags`.
         #[clap()]
         key: String,
@@ -42,6 +42,10 @@ enum OIHelperCommands {
         /// The name of the source file, the extension isn't neccessary.
         #[clap()]
         name: String,
+
+        /// The template name. Defaults to default.
+        #[clap(long, default_value="default")]
+        template: String,
     },
 
     /// Run the program.

@@ -1,9 +1,14 @@
 //! This file contains operationgs and data structure about a workspace.
 
-use std::{path::{Path, PathBuf}, fs::{File, OpenOptions, self}, io::{Read, stdin, Write}, process::{exit, Command}};
+use std::{
+    fs::{self, File, OpenOptions},
+    io::{stdin, Read, Write},
+    path::{Path, PathBuf},
+    process::{exit, Command},
+};
 
 use crossterm::style::Stylize;
-use json::{JsonValue, object};
+use json::{object, JsonValue};
 
 use super::resource;
 
@@ -14,7 +19,6 @@ pub struct Workspace {
 
 #[allow(dead_code)]
 impl Workspace {
-
     /// Create from path.
     pub fn create(path: &PathBuf) -> Self {
         let default_workspace_file = object! {
@@ -31,16 +35,20 @@ impl Workspace {
         let cfg_file = cfg_path.as_path();
 
         if !cfg_file.exists() {
-            let mut f = File::create(&cfg_file).expect("cannot create the workspace file. stopped.");
-            f.write_all(default_workspace_file.dump().as_bytes()).expect("cannot write to workspace file. stopped.");
+            let mut f =
+                File::create(&cfg_file).expect("cannot create the workspace file. stopped.");
+            f.write_all(default_workspace_file.dump().as_bytes())
+                .expect("cannot write to workspace file. stopped.");
         } else {
             eprintln!("{} The workspace configuration file already exists. Are you sure to override it? [Y/{}]", "[WARNING]".bold().yellow(), "N".bold().blue());
             let mut choice = String::new();
             std::io::stdin().read_line(&mut choice).unwrap();
             if choice.trim().to_uppercase() == "Y" {
                 // User chose yes, then override it.
-                let mut f = File::create(&cfg_file).expect("cannot create the workspace file. stopped.");
-                f.write_all(default_workspace_file.dump().as_bytes()).expect("cannot write to workspace file. stopped.");
+                let mut f =
+                    File::create(&cfg_file).expect("cannot create the workspace file. stopped.");
+                f.write_all(default_workspace_file.dump().as_bytes())
+                    .expect("cannot write to workspace file. stopped.");
             } else {
                 exit(-1);
             }
@@ -50,15 +58,20 @@ impl Workspace {
 
     /// Initialize from json.
     pub fn from_json(json: JsonValue) -> Self {
-        Self { config: json.clone() }
+        Self {
+            config: json.clone(),
+        }
     }
 
     /// Initialize from file.
     pub fn from_file(path: &Path) -> Self {
         let mut file = File::open(path).expect("cannot find workspace config. stopped. \nHint: Have you executed `oi_helper init` or are you in the root directory of the workspace?");
         let mut file_content = String::new();
-        file.read_to_string(&mut file_content).expect("cannot read from the workspace configuration file. stopped.");
-        return Self::from_json(json::parse(&file_content).expect("the oi_ws.json is not a valid json file. stopped."));
+        file.read_to_string(&mut file_content)
+            .expect("cannot read from the workspace configuration file. stopped.");
+        return Self::from_json(
+            json::parse(&file_content).expect("the oi_ws.json is not a valid json file. stopped."),
+        );
     }
 
     /// Check the version of the workspace.
@@ -70,13 +83,17 @@ impl Workspace {
                 let mut u_c = String::new();
                 stdin().read_line(&mut u_c).unwrap();
                 if u_c.trim().to_uppercase() == "Y" {
-                    self.config["oi_helper_version"] = JsonValue::String(String::from(crate::VERSION));
+                    self.config["oi_helper_version"] =
+                        JsonValue::String(String::from(crate::VERSION));
                 } else {
                     exit(-1);
                 }
             }
         } else {
-            panic!("{} The workspace config is broken or not in the correct format. Stopped.", "[ERROR]".red().bold());
+            panic!(
+                "{} The workspace config is broken or not in the correct format. Stopped.",
+                "[ERROR]".red().bold()
+            );
         }
     }
 
@@ -87,32 +104,44 @@ impl Workspace {
 
     /// Save the configuration.
     pub fn save_config(&self, path: &Path) {
-        let mut file = OpenOptions::new().write(true).truncate(true).open(path).expect("error: unable to save workspace config");
+        let mut file = OpenOptions::new()
+            .write(true)
+            .truncate(true)
+            .open(path)
+            .expect("error: unable to save workspace config");
         file.write_all(self.config.dump().as_bytes()).unwrap();
-    } 
+    }
 
     /// Create a new C++ source file.
-    pub fn create_cpp(&self, name: &str) {
-        let real_name = if name.ends_with(".cpp") && name.ends_with(".cc") && name.ends_with(".cxx") {
+    pub fn create_cpp(&self, name: &str, template: &str) {
+        let real_name = if name.ends_with(".cpp") && name.ends_with(".cc") && name.ends_with(".cxx")
+        {
             String::from(name)
         } else {
             String::from(name) + "." + self.config["cc_default_extension"].to_string().as_str()
         };
-        let mut file = File::create(Path::new(&real_name)).expect("error: cannot create cpp file. stopped. ");
-        let template = match self.config["cc_template"].to_string().as_str() {
-            "temp1" => {
-                resource::CPP_TEMPLATE_1
+        let mut file =
+            File::create(Path::new(&real_name)).expect("error: cannot create cpp file. stopped. ");
+        let template_scheme_obj = self.config["cc_template"].to_string();
+        let template_scheme = template_scheme_obj.as_str();
+        let template = match template {
+            "dp" => match template_scheme {
+                "temp1" => resource::CPP_DP_TEMPLATE_0.trim_start(),
+                "temp0" | _ => resource::CPP_DP_TEMPLATE_1.trim_end(),
             }
-            _ => {
-                resource::CPP_TEMPLATE_0
+            "default" | _ => match template_scheme {
+                "temp1" => resource::CPP_TEMPLATE_1.trim_start(),
+                "temp0" | _ => resource::CPP_TEMPLATE_0.trim_start(),
             }
         };
-        file.write_all(template.replace("{##}", name).as_bytes()).unwrap();
+        file.write_all(template.replace("{##}", name).as_bytes())
+            .unwrap();
     }
 
     /// Run a C++ source file.
     pub fn run_cpp(&self, name: &str) {
-        let real_name = if name.ends_with(".cpp") && name.ends_with(".cc") && name.ends_with(".cxx") {
+        let real_name = if name.ends_with(".cpp") && name.ends_with(".cc") && name.ends_with(".cxx")
+        {
             String::from(name)
         } else {
             String::from(name) + "." + self.config["cc_default_extension"].to_string().as_str()
@@ -124,17 +153,18 @@ impl Workspace {
             .arg(format!("{}", executable_name))
             .arg("--")
             .arg(&real_name)
-            .status() {
-            Ok(_) => {},
+            .status()
+        {
+            Ok(_) => {}
             Err(_) => {
                 eprintln!("Failed to compile the program. Stopped. (CE(0))");
             }
         }
         match Command::new(format!("./{}", executable_name)).status() {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(_) => {
                 eprintln!("(RE(0))");
-            },
+            }
         }
         fs::remove_file(Path::new(&format!("./{}", executable_name))).unwrap();
     }
@@ -167,13 +197,11 @@ impl Workspace {
                     }
                     status = 0
                 }
-                2 => {
-                    match i {
-                        '"' => status = 0,
-                        '\\' => status = 3,
-                        _ => buffer.push(i),
-                    }
-                }
+                2 => match i {
+                    '"' => status = 0,
+                    '\\' => status = 3,
+                    _ => buffer.push(i),
+                },
                 3 => {
                     status = 0;
                 }
@@ -182,5 +210,4 @@ impl Workspace {
         }
         result
     }
-
 }
