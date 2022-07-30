@@ -193,7 +193,7 @@ impl Workspace {
     }
 
     /// Create a new C++ source file.
-    pub fn create_cpp(&self, name: &str, template: &str, maxn: &str, debug_kit: bool) {
+    pub fn create_cpp(&self, name: &str, template: &str, maxn: &str, maxl: &str, debug_kit: bool) {
         let real_name = if name.ends_with(".cpp") && name.ends_with(".cc") && name.ends_with(".cxx")
         {
             String::from(name)
@@ -213,6 +213,10 @@ impl Workspace {
             "default" => match template_scheme {
                 "temp1" => resource::CPP_TEMPLATE_1.trim_start(),
                 "temp0" | _ => resource::CPP_TEMPLATE_0.trim_start(),
+            }
+            "dp-2d" => match template_scheme {
+                "temp1" => resource::CPP_DP_2D_TEMPLATE_1.trim_start(),
+                "temp0" | _ => resource::CPP_DP_2D_TEMPLATE_0.trim_start(),
             }
             _ => {
                 if let Ok(mut f) = File::open(&Path::new(template)) {
@@ -242,6 +246,7 @@ impl Workspace {
                     ""
                 }
             })
+            .replace("{#maxl_value#}", maxl)
             .as_bytes()
         )
             .unwrap();

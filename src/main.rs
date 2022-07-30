@@ -57,15 +57,19 @@ enum OIHelperCommands {
         name: String,
 
         /// The template name. Defaults to default.
-        #[clap(long, default_value="default")]
+        #[clap(short='t', long, default_value="default")]
         template: String,
 
         /// The value of the `MAXN` constant.
         #[clap(long, default_value="1e5+114514")]
         maxn: String,
 
+        /// The value of the `MAXL` constant, will be used in the 2d dp template.
+        #[clap(long, default_value="128")]
+        maxl: String,
+
         /// Determine if enable the debug kit.
-        #[clap(long)]
+        #[clap(short='d', long, default_value_t)]
         debug_kit: bool,
     },
 

@@ -36,3 +36,8 @@ If you are interested in building it by yourself, then type:
 ```
 cargo build
 ```
+> Before doing this you should install rust from [here](https://rustup.rs/).
+
+## Usage Documentation
+
+[Click Here](doc/Overview.md)
