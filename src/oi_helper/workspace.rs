@@ -71,7 +71,7 @@ impl Workspace {
                     }
 
                     // Update the version.
-                    ccfg["oi_helper_version"] = crate::VERSION;
+                    mccfg["oi_helper_version"] = JsonValue::String(String::from(crate::VERSION));
 
                     let mut f = File::create(&pth_buf.as_path()).unwrap();
                     f.write_all(mccfg.dump().as_bytes()).unwrap();
