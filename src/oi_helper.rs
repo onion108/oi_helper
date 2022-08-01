@@ -63,10 +63,10 @@ impl OIHelper {
                 workspace.create_cpp(name, template, maxn, maxl, *debug_kit);
             },
 
-            OIHelperCommands::Run { name } => {
+            OIHelperCommands::Run { name, debug } => {
                 let mut workspace = Workspace::from_file(Path::new("./oi_ws.json"), &self.global_config_path.clone());
                 workspace.check_version("./oi_ws.json");
-                workspace.run_cpp(name);
+                workspace.run_cpp(name, *debug);
             },
 
             OIHelperCommands::Info => {

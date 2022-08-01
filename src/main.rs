@@ -78,6 +78,10 @@ enum OIHelperCommands {
         /// The name of the source file, the extension isn't neccessary.
         #[clap()]
         name: String,
+
+        /// Determine if debug kit is enabled (so the things in debug({}) will be executed. By default, they won't be executed unless you enable this option.)
+        #[clap(short='d', long)]
+        debug: bool,
     },
 
     /// Display the info of current workspace.

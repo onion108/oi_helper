@@ -70,6 +70,9 @@ impl Workspace {
                         }
                     }
 
+                    // Update the version.
+                    ccfg["oi_helper_version"] = crate::VERSION;
+
                     let mut f = File::create(&pth_buf.as_path()).unwrap();
                     f.write_all(mccfg.dump().as_bytes()).unwrap();
                     mccfg
@@ -253,7 +256,7 @@ impl Workspace {
     }
 
     /// Run a C++ source file.
-    pub fn run_cpp(&self, name: &str) {
+    pub fn run_cpp(&self, name: &str, use_debug: bool) {
         let real_name = if name.ends_with(".cpp") && name.ends_with(".cc") && name.ends_with(".cxx")
         {
             String::from(name)
@@ -265,6 +268,13 @@ impl Workspace {
             .args(self.parse_args())
             .arg(format!("-o"))
             .arg(format!("{}", executable_name))
+            .arg({
+                if use_debug {
+                    "-D__DEBUG__"
+                } else {
+                    ""
+                }
+            })
             .arg("--")
             .arg(&real_name)
             .status()
