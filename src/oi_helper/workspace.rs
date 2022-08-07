@@ -264,6 +264,9 @@ impl Workspace {
             String::from(name) + "." + self.config["cc_default_extension"].to_string().as_str()
         };
         let executable_name = real_name.split('.').collect::<Vec<&str>>()[0];
+        if Path::new(executable_name).exists() {
+            fs::remove_file(Path::new(executable_name)).expect("Failed to clean the old built target.");
+        }
         match Command::new(self.config["cc_compiler"].to_string().as_str())
             .args(self.parse_args())
             .arg(format!("-o"))
@@ -279,7 +282,9 @@ impl Workspace {
             .arg(&real_name)
             .status()
         {
-            Ok(_) => {}
+            Ok(_) => {
+                println!("{}", "Compiled. ".bold().green());
+            }
             Err(_) => {
                 eprintln!("Failed to compile the program. Stopped. (CE(0))");
             }
