@@ -115,8 +115,13 @@ impl Workspace {
         if !cfg_file.exists() {
             let mut f =
                 File::create(&cfg_file).expect("cannot create the workspace file. stopped.");
-            f.write_all(default_workspace_file.dump().as_bytes())
-                .expect("cannot write to workspace file. stopped.");
+            match f.write_all(default_workspace_file.dump().as_bytes()) {
+                Ok(_) => {}
+                Err(err) => {
+                    eprintln!("Cannot write to workspace file: {}", err);
+                    exit(-1);
+                }
+            }
         } else {
             eprintln!("{} The workspace configuration file already exists. Are you sure to override it? [Y/{}]", "[WARNING]".bold().yellow(), "N".bold().blue());
             let mut choice = String::new();
@@ -125,8 +130,13 @@ impl Workspace {
                 // User chose yes, then override it.
                 let mut f =
                     File::create(&cfg_file).expect("cannot create the workspace file. stopped.");
-                f.write_all(default_workspace_file.dump().as_bytes())
-                    .expect("cannot write to workspace file. stopped.");
+                match f.write_all(default_workspace_file.dump().as_bytes()) {
+                    Ok(_) => {},
+                    Err(err) => {
+                        eprintln!("{}", format!("Cannot write to the workspace file: {}", err).bold().red());
+                        exit(-1);
+                    },
+                }
             } else {
                 exit(-1);
             }
@@ -156,6 +166,7 @@ impl Workspace {
 
     /// Check the version of the workspace.
     pub fn check_version(&mut self, p: &str) {
+        // If have this key.
         if self.config.has_key("oi_helper_version") {
             let version = self.config["oi_helper_version"].clone();
             if version.to_string() != crate::VERSION {
@@ -204,7 +215,13 @@ impl Workspace {
             String::from(name) + "." + self.config["cc_default_extension"].to_string().as_str()
         };
         let mut file =
-            File::create(Path::new(&real_name)).expect("error: cannot create cpp file. stopped. ");
+            match File::create(Path::new(&real_name)) {
+                Ok(file) => file,
+                Err(_) => {
+                    eprintln!("{}", format!("Failed to create the C++ source file. Please check your configuration.").bold().red());
+                    exit(-1);
+                }
+            };
         let template_scheme_obj = self.config["cc_template"].to_string();
         let mut buffer = String::new();
         let template_scheme = template_scheme_obj.as_str();
@@ -287,12 +304,13 @@ impl Workspace {
             }
             Err(_) => {
                 eprintln!("Failed to compile the program. Stopped. (CE(0))");
+                exit(-1);
             }
         }
         match Command::new(format!("./{}", executable_name)).status() {
             Ok(_) => {}
             Err(_) => {
-                eprintln!("(RE(0))");
+                eprintln!("{}", format!("Runtime error occurred. ").bold().red());
             }
         }
         fs::remove_file(Path::new(&format!("./{}", executable_name))).unwrap();
