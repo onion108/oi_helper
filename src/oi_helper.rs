@@ -9,6 +9,7 @@ use self::workspace::Workspace;
 mod workspace;
 mod resource;
 mod samples;
+mod samples_cli;
 
 
 /// The main model of the OI Helper.
@@ -84,6 +85,11 @@ impl OIHelper {
             OIHelperCommands::GlobalConfig { key, value } => {
                 let mut workspace = Workspace::from_file(Path::new("./oi_ws.json"), &self.global_config_path.clone());
                 workspace.set_g_config(key, value);
+            },
+
+            OIHelperCommands::Samples { subcommand } => {
+                let mut workspace = Workspace::from_file(Path::new("./oi_ws.json"), &self.global_config_path.clone());
+                samples_cli::samples(&mut workspace, subcommand)
             }
 
         }
