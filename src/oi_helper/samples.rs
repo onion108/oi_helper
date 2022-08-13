@@ -65,8 +65,11 @@ impl Samples {
 
     /// Create a sample configuration.
     pub fn create(filename: &str) {
+        if crate::is_debug() {
+            println!("[DEBUG] Creating with (filename = {filename})");
+        }
         let path = Path::new(filename);
-        let mut file = match OpenOptions::new().create(true).truncate(true).open(path) {
+        let mut file = match File::create(path) {
             Ok(file) => file,
             Err(err) => {
                 eprintln!("{}", format!("Cannot create configuration file: {}", err).bold().red());

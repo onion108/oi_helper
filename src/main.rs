@@ -7,6 +7,13 @@ mod oi_helper;
 /// The version of the command-line tool.
 pub static VERSION: &str = env!("CARGO_PKG_VERSION");
 
+pub fn is_debug() -> bool {
+    match std::env::var("APP_DEBUG") {
+        Ok(s) => s.trim().to_uppercase() == "YES",
+        Err(_) => false,
+    }
+}
+
 /// Subcommands for the sample.
 #[derive(Subcommand)]
 pub enum SamplesSubcommand {
