@@ -500,8 +500,8 @@ impl Workspace {
         let mut total_points = 0_u32;
         let mut group_id = 0;
         let temp_in = Path::new("tkejhowiuyoiuwoiub_in.bakabaka.in.txt");
-        let temp_out = Path::new("tkejhowiuyoiuwopwotuyowquyou_out.nevergonnagiveyouup.out.txt");
         for i in sample_group {
+            eprintln!("Testing test #{group_id}...");
             let timeout = Duration::from_millis(i.timeout as u64);
             let points = i.points;
 
@@ -552,10 +552,10 @@ impl Workspace {
 
                     // Check and compare the results.
                     if content.trim() == i.expected_out {
-                        eprintln!("{}", format!("Test #{group_id} passed: AC({})", i.points));
+                        eprintln!("{}", format!("Test #{group_id} passed: AC({})", i.points).green());
                         total_points += points;
                     } else {
-                        eprintln!("{}", format!("Test #{group_id} failed: WA(0)"));
+                        eprintln!("{}", format!("Test #{group_id} failed: WA(0)").red());
                         eprintln!("");
                         eprintln!("Expected: ");
                         eprintln!("{}", i.expected_out.on_black());
@@ -567,6 +567,7 @@ impl Workspace {
                     }
                 },
                 Err(_) => {
+                    child.kill().unwrap();
                     eprintln!("{}", format!("Test #{group_id} failed: TLE(0)").red());
                 }
             }
