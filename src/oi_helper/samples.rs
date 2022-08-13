@@ -12,6 +12,15 @@ pub struct Samples {
 }
 
 #[allow(dead_code)]
+pub struct SampleInfo {
+    expected_in: String,
+    expected_out: String,
+    timeout: u32,
+    memory_limit: u32,
+    points: u32,
+}
+
+#[allow(dead_code)]
 impl Samples {
     /// Construct from a file. `filename` is the path to the configuration file, i.e., `samples_info.json`
     pub fn from_file(filename: &str) -> Self {
@@ -102,8 +111,8 @@ impl Samples {
         }
     }
 
-    /// Create a group of samples.
-    pub fn create_samples(&mut self) {
+    /// Create a sample.
+    pub fn create_sample(&mut self, points: u32, timeout: u32, mem_limit: u32) {
         self.check_config();
         let next_no = self.config["sample_list"].len();
         let parent_dir = match Path::new(&self.config_file_path).parent() {
@@ -139,8 +148,9 @@ impl Samples {
         self.config["sample_list"].push(object! {
             "in_file": format!("{next_no}.in"),
             "out_file": format!("{next_no}.out"),
-            "timeout_ms": 1000,
-            "memory_limit": 256,
+            "timeout_ms": timeout,
+            "memory_limit": mem_limit,
+            "points": points,
         }).unwrap();
 
         // Save the configuration.
@@ -167,7 +177,7 @@ impl Samples {
     }
 
     /// Get in-out for a sample with index.
-    fn get(&self, idx: usize) -> Option<(String, String)> {
+    fn get(&self, idx: usize) -> Option<SampleInfo> {
         self.check_config();
         if idx >= self.config["sample_list"].len() {
             return None;
@@ -184,13 +194,37 @@ impl Samples {
         let infile_content = self.read_from_pathbuf(&infile_pathbuf);
         let outfile_content = self.read_from_pathbuf(&outfile_pathbuf);
 
-        Some((infile_content, String::from(outfile_content.trim())))
+        Some(SampleInfo {
+            expected_in: infile_content,
+            expected_out: outfile_content,
+            timeout: match self.config["sample_list"][idx]["timeout"].as_u32() {
+                Some(timeout) => timeout,
+                None => {
+                    eprintln!("{}", format!("Error reading sample. ").bold().red());
+                    exit(-1);
+                }
+            },
+            memory_limit: match self.config["sample_list"][idx]["memory_limit"].as_u32() {
+                Some(timeout) => timeout,
+                None => {
+                    eprintln!("{}", format!("Error reading sample. ").bold().red());
+                    exit(-1);
+                }
+            },
+            points: match self.config["sample_list"][idx]["points"].as_u32() {
+                Some(timeout) => timeout,
+                None => {
+                    eprintln!("{}", format!("Error reading sample. ").bold().red());
+                    exit(-1);
+                }
+            },
+        })
     }
 
 }
 
 impl Iterator for Samples {
-    type Item = (String, String);
+    type Item = SampleInfo;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.get(self.iter_counter) {
