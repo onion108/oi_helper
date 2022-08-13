@@ -301,7 +301,13 @@ impl Workspace {
         };
         let executable_name = real_name.split('.').collect::<Vec<&str>>()[0];
         if Path::new(executable_name).exists() {
-            fs::remove_file(Path::new(executable_name)).expect("Failed to clean the old built target.");
+            match fs::remove_file(Path::new(executable_name)) {
+                Ok(_) => {} 
+                Err(err) => {
+                    eprintln!("{}", format!("failed to clean the old built target:{}", err).bold().red());
+                    exit(-1);
+                }
+            }
         }
         match Command::new(self.config["cc_compiler"].to_string().as_str())
             .args(self.parse_args())
