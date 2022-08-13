@@ -156,8 +156,14 @@ impl Workspace {
     pub fn from_file(path: &Path, global_cfg: &Option<String>) -> Self {
         let mut file = File::open(path).expect("cannot find workspace config. stopped. \nHint: Have you executed `oi_helper init` or are you in the root directory of the workspace?");
         let mut file_content = String::new();
-        file.read_to_string(&mut file_content)
-            .expect("cannot read from the workspace configuration file. stopped.");
+        match file.read_to_string(&mut file_content) {
+            Ok(_) => {}
+            Err(err) => {
+                eprintln!("cannot read workspace file: {}", err);
+                eprintln!("{}{}{}", "[HINT] Have you ran ".bold().yellow(), "oi_helper init".bold().cyan(), " yet? ".bold().yellow());
+                exit(-1);
+            }
+        }
         return Self::from_json(
             json::parse(&file_content).expect("the oi_ws.json is not a valid json file. stopped."),
             global_cfg,
@@ -168,7 +174,10 @@ impl Workspace {
     pub fn check_version(&mut self, p: &str) {
         // If have this key.
         if self.config.has_key("oi_helper_version") {
+            // Get the version string.
             let version = self.config["oi_helper_version"].clone();
+
+            // Check the version.
             if version.to_string() != crate::VERSION {
                 eprintln!("{} The version of oi_helper is {} but the workspace version is {}. Load it anyway? [Y/{}]", "[WARNING]".bold().yellow(), crate::VERSION.bold().green(), version.to_string().bold().red(), "N".bold().blue());
                 eprintln!("{}", "[HINT] You can use `oi_helper update` to update your workspace to the newest version safely.".bold().yellow());
@@ -177,9 +186,19 @@ impl Workspace {
                 if u_c.trim().to_uppercase() == "Y" {
                     self.config["oi_helper_version"] =
                         JsonValue::String(String::from(crate::VERSION));
+                    self.config["__unsafe_updating"] = JsonValue::Boolean(true);
                     self.save_config(Path::new(p));
                 } else {
                     exit(-1);
+                }
+            } else {
+                if self.config.has_key("__unsafe_updating") {
+                    if let Some(uu) =  self.config["__unsafe_updating"].as_bool() {
+                        if uu {
+                            eprintln!("{}", "[WARNING] Running in an unsafe updated workspace. ".bold().yellow());
+                            eprintln!("{}{}{}", "[HINT] Use ".bold().yellow(), "oi_helper update".bold().cyan(), " to update the workspace safely. ".bold().yellow())
+                        }
+                    }
                 }
             }
         } else {
@@ -361,7 +380,15 @@ impl Workspace {
     /// Display the info of a workspace.
     pub fn display_info(&self) {
         if self.config.has_key("oi_helper_version") {
-            println!("Current Workspace's OI Helper Version (oi_helper_version): {}", self.config["oi_helper_version"].to_string());
+            println!("Current Workspace's OI Helper Version (oi_helper_version): {} {}", self.config["oi_helper_version"].to_string(), if self.config.has_key("__unsafe_updating") {
+                if let Some(uu) = self.config["__unsafe_updating"].as_bool() {
+                    if uu { "UNSAFE UPDATED".yellow().bold() } else { "".stylize() }
+                } else {
+                    "MAYBE BROKEN".red().bold()
+                }
+            } else {
+                "".reset()
+            });
         }
         if self.config.has_key("cc_flags") {
             println!("Current C++ Compiler Flags (cc_flags): {}", self.config["cc_flags"].to_string());
@@ -388,5 +415,6 @@ impl Workspace {
                 self.config[i] = default[i].clone();
             }
         }
+        self.config["__unsafe_updating"] = JsonValue::from(false);
     }
 }
