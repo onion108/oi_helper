@@ -8,6 +8,7 @@ use self::workspace::Workspace;
 
 mod workspace;
 mod resource;
+mod samples;
 
 
 /// The main model of the OI Helper.
