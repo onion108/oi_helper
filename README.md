@@ -40,6 +40,7 @@ cargo build
 
 Also, there is a special kind of versions called `developement previews`, where the version number will end with `devpreview`. `devpreview`s are unstable and may cause some problems, and even may fails the compiling, but the `devpreview` have the newest changes. If you really want to use the features that only work with the `devpreview`, you can type the following command after cloning this repository:
 ```
+git switch dev
 cargo install --path .
 ```
 If it builds, you will now have the `devpreview` version instead of your normal release.
