@@ -4,13 +4,14 @@ use std::{
     fs::{self, File, OpenOptions},
     io::{stdin, Read, Write},
     path::{Path, PathBuf},
-    process::{exit, Command},
+    process::{exit, Command, Stdio}, time::Duration,
 };
 
 use crossterm::style::Stylize;
 use json::{object, JsonValue};
+use wait_timeout::ChildExt;
 
-use super::resource;
+use super::{resource, samples::Samples};
 
 /// The workspace model.
 pub struct Workspace {
@@ -452,4 +453,131 @@ impl Workspace {
         }
         self.config["__unsafe_updating"] = JsonValue::from(false);
     }
+
+    /// Test the given target.
+    pub fn test(&self, name: &str, sample_group: &mut Samples) {
+        // Get the real name.
+        let real_name = if name.ends_with(".cpp") && name.ends_with(".cc") && name.ends_with(".cxx")
+        {
+            String::from(name)
+        } else {
+            String::from(name) + "." + self.config["cc_default_extension"].to_string().as_str()
+        };
+
+        // Generate the executable's name.
+        let executable_name = real_name.split('.').collect::<Vec<&str>>()[0];
+
+        // Check if the old build target is already built and haven't been removed yet.
+        if Path::new(executable_name).exists() {
+            match fs::remove_file(Path::new(executable_name)) {
+                Ok(_) => {} 
+                Err(err) => {
+                    eprintln!("{}", format!("failed to clean the old built target:{}", err).bold().red());
+                    exit(-1);
+                }
+            }
+        }
+
+        // Compile the target.
+        match Command::new(self.config["cc_compiler"].to_string().as_str())
+            .args(self.parse_args())
+            .arg(format!("-o"))
+            .arg(format!("{}", executable_name))
+            .arg("--")
+            .arg(&real_name)
+            .status()
+        {
+            Ok(_) => {
+                println!("{}", "Compiled. ".bold().green());
+            }
+            Err(_) => {
+                eprintln!("Failed to compile the program. Stopped. (CE(0))");
+                exit(-1);
+            }
+        }
+
+        // Run the tests
+        let mut total_points = 0_u32;
+        let mut group_id = 0;
+        let temp_in = Path::new("tkejhowiuyoiuwoiub_in.bakabaka.in.txt");
+        let temp_out = Path::new("tkejhowiuyoiuwopwotuyowquyou_out.nevergonnagiveyouup.out.txt");
+        for i in sample_group {
+            let timeout = Duration::from_millis(i.timeout as u64);
+            let points = i.points;
+
+            let mut in_file = match OpenOptions::new().write(true).read(true).truncate(true).create(true).open(temp_in) {
+                Ok(file) => file,
+                Err(err) => {
+                    eprintln!("{}", format!("Error running sample group #{group_id}: {err}").bold().red());
+                    exit(-1);
+                }
+            };
+            match write!(in_file, "{}", i.expected_in) {
+                Ok(_) => {}
+                Err(err) => {
+                    eprintln!("{}", format!("Error running sample group #{group_id}: {err}").bold().red());
+                    exit(-1);
+                }
+            }
+            if crate::is_debug() {
+                println!("[DEBUG] Write {} to {}.", i.expected_in, temp_in.to_str().unwrap());
+            }
+
+            in_file = match File::open(temp_in) {
+                Ok(file) => file,
+                Err(err) => {
+                    eprintln!("{}", format!("Error running sample group #{group_id}: {err}"));
+                    exit(-1);
+                }
+            };
+
+
+            // Spawn the child process.
+            let mut child = match Command::new(format!("./{}", executable_name))
+                .stdin(in_file)
+                .stdout(Stdio::piped())
+                .spawn() {
+                Ok(c) => c,
+                Err(err) => {
+                    eprintln!("{}", format!("Error running sample group #{}: {err}", group_id).bold().red());
+                    exit(-1);
+                }
+            };
+            match child.wait_timeout(timeout) {
+                Ok(_) => {
+
+                    // Read the result output.
+                    let mut _tmp0 = child.wait_with_output().unwrap();
+                    let mut content = String::from_utf8_lossy(&_tmp0.stdout[..]);
+
+                    // Check and compare the results.
+                    if content.trim() == i.expected_out {
+                        eprintln!("{}", format!("Test #{group_id} passed: AC({})", i.points));
+                        total_points += points;
+                    } else {
+                        eprintln!("{}", format!("Test #{group_id} failed: WA(0)"));
+                        eprintln!("");
+                        eprintln!("Expected: ");
+                        eprintln!("{}", i.expected_out.on_black());
+                        eprintln!("Actually: ");
+                        eprintln!("{}", content.trim().on_red());
+                        eprintln!("================================================");
+                        eprintln!("Sample in: ");
+                        eprintln!("{}", i.expected_in);
+                    }
+                },
+                Err(_) => {
+                    eprintln!("{}", format!("Test #{group_id} failed: TLE(0)").red());
+                }
+            }
+            group_id += 1;
+        }
+
+        println!("Total points you get: {}", total_points);
+
+        // Finally remove the files.
+        fs::remove_file(Path::new(&format!("./{}", executable_name))).unwrap();
+        fs::remove_file(temp_in).unwrap();
+    }
+
 }

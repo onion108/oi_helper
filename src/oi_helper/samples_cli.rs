@@ -1,4 +1,4 @@
-use std::{path::{Path, self}, process::exit, fs::{File, self}};
+use std::{path::Path, process::exit, fs};
 
 use crossterm::style::Stylize;
 
@@ -8,7 +8,7 @@ use super::{workspace::Workspace, samples::Samples};
 
 
 
-pub fn samples(workspace: &mut Workspace, subcommand: &SamplesSubcommand) {
+pub fn samples(_workspace: &mut Workspace, subcommand: &SamplesSubcommand) {
     
     match subcommand {
         SamplesSubcommand::Init { name } => {

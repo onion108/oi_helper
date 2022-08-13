@@ -4,7 +4,7 @@ use std::{path::Path, fs};
 
 use crate::OIHelperCommands;
 
-use self::workspace::Workspace;
+use self::{workspace::Workspace, samples::Samples};
 
 mod workspace;
 mod resource;
@@ -89,7 +89,17 @@ impl OIHelper {
 
             OIHelperCommands::Samples { subcommand } => {
                 let mut workspace = Workspace::from_file(Path::new("./oi_ws.json"), &self.global_config_path.clone());
+                workspace.check_version("./oi_ws.json");
                 samples_cli::samples(&mut workspace, subcommand)
+            },
+
+            OIHelperCommands::Test { target } => {
+                let mut workspace = Workspace::from_file(Path::new("./oi_ws.json"), &self.global_config_path.clone());
+                workspace.check_version("./oi_ws.json");
+                let path_to_sampledir_str = format!("./{}.smpd", target.to_owned());
+                let path_to_sampledir = Path::new(&path_to_sampledir_str);
+                let mut samples = Samples::from_file(path_to_sampledir.join("samples_info.json").to_str().unwrap());
+                workspace.test(target, &mut samples);
             }
 
         }

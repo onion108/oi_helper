@@ -13,11 +13,11 @@ pub struct Samples {
 
 #[allow(dead_code)]
 pub struct SampleInfo {
-    expected_in: String,
-    expected_out: String,
-    timeout: u32,
-    memory_limit: u32,
-    points: u32,
+    pub expected_in: String,
+    pub expected_out: String,
+    pub timeout: u32,
+    pub memory_limit: u32,
+    pub points: u32,
 }
 
 #[allow(dead_code)]
@@ -200,24 +200,24 @@ impl Samples {
         Some(SampleInfo {
             expected_in: infile_content,
             expected_out: outfile_content,
-            timeout: match self.config["sample_list"][idx]["timeout"].as_u32() {
+            timeout: match self.config["sample_list"][idx]["timeout_ms"].as_u32() {
                 Some(timeout) => timeout,
                 None => {
-                    eprintln!("{}", format!("Error reading sample. ").bold().red());
+                    eprintln!("{}", format!("Error reading sample: invalid timeout value. ").bold().red());
                     exit(-1);
                 }
             },
             memory_limit: match self.config["sample_list"][idx]["memory_limit"].as_u32() {
                 Some(timeout) => timeout,
                 None => {
-                    eprintln!("{}", format!("Error reading sample. ").bold().red());
+                    eprintln!("{}", format!("Error reading sample: invalid memory_limit value. ").bold().red());
                     exit(-1);
                 }
             },
             points: match self.config["sample_list"][idx]["points"].as_u32() {
                 Some(timeout) => timeout,
                 None => {
-                    eprintln!("{}", format!("Error reading sample. ").bold().red());
+                    eprintln!("{}", format!("Error reading sample: invalid points value. ").bold().red());
                     exit(-1);
                 }
             },
@@ -242,3 +242,4 @@ impl Iterator for Samples {
         }
     }
 }
+

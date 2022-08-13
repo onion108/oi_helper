@@ -138,7 +138,14 @@ enum OIHelperCommands {
     Samples {
         #[clap(subcommand)]
         subcommand: SamplesSubcommand,
-    }
+    },
+
+    /// Run the sample group on a target.
+    Test {
+        /// The file name without extension.
+        #[clap()]
+        target: String,
+    },
 
 }
 
