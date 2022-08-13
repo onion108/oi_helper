@@ -548,7 +548,7 @@ impl Workspace {
 
                     // Read the result output.
                     let mut _tmp0 = child.wait_with_output().unwrap();
-                    let mut content = String::from_utf8_lossy(&_tmp0.stdout[..]);
+                    let content = String::from_utf8_lossy(&_tmp0.stdout[..]);
 
                     // Check and compare the results.
                     if content.trim() == i.expected_out {
