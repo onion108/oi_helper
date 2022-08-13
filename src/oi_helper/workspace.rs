@@ -244,6 +244,8 @@ impl Workspace {
         let template_scheme_obj = self.config["cc_template"].to_string();
         let mut buffer = String::new();
         let template_scheme = template_scheme_obj.as_str();
+
+        // Choose the tempalte.
         let template = match template {
             "dp" => match template_scheme {
                 "temp1" => resource::CPP_DP_TEMPLATE_0.trim_start(),
@@ -258,7 +260,10 @@ impl Workspace {
                 "temp0" | _ => resource::CPP_DP_2D_TEMPLATE_0.trim_start(),
             }
             _ => {
+                // Try to treat the template name as a path to the template file.
                 if let Ok(mut f) = File::open(&Path::new(template)) {
+
+                    // Try to read it.
                     match f.read_to_string(&mut buffer) {
                         Ok(_) => {},
                         Err(err) => {
@@ -267,13 +272,17 @@ impl Workspace {
                         },
                     }
                     buffer.as_str()
+
                 } else {
+                    // All tryings were failed. Tell the user about that.
                     eprintln!("Invalid template: {}", template);
                     eprintln!("{}", "Usable tempaltes: dp, default, [path/to/template]".bold().yellow());
                     exit(-1);
                 }
             }
         };
+        
+        // Fill in all the placeholders and write.
         file.write_all(
         template
             .replace("{##}", name)
@@ -293,13 +302,18 @@ impl Workspace {
 
     /// Run a C++ source file.
     pub fn run_cpp(&self, name: &str, use_debug: bool) {
+        // Get the real name.
         let real_name = if name.ends_with(".cpp") && name.ends_with(".cc") && name.ends_with(".cxx")
         {
             String::from(name)
         } else {
             String::from(name) + "." + self.config["cc_default_extension"].to_string().as_str()
         };
+
+        // Generate the executable's name.
         let executable_name = real_name.split('.').collect::<Vec<&str>>()[0];
+
+        // Check if the old build target is already built and haven't been removed yet.
         if Path::new(executable_name).exists() {
             match fs::remove_file(Path::new(executable_name)) {
                 Ok(_) => {} 
@@ -309,6 +323,8 @@ impl Workspace {
                 }
             }
         }
+
+        // Compile the target.
         match Command::new(self.config["cc_compiler"].to_string().as_str())
             .args(self.parse_args())
             .arg(format!("-o"))
@@ -332,22 +348,30 @@ impl Workspace {
                 exit(-1);
             }
         }
+
+        // Run the target.
         match Command::new(format!("./{}", executable_name)).status() {
             Ok(_) => {}
             Err(_) => {
                 eprintln!("{}", format!("Runtime error occurred. ").bold().red());
             }
         }
+
+        // Finally remove the file.
         fs::remove_file(Path::new(&format!("./{}", executable_name))).unwrap();
     }
 
     fn parse_args(&self) -> Vec<String> {
+
         let mut result = Vec::<String>::new();
         let mut buffer = String::new();
         let source = self.config["cc_flags"].to_string();
         let mut status = 0;
+
         for i in source.chars() {
+
             match status {
+
                 0 => {
                     match i {
                         ' ' => status = 1,
@@ -355,6 +379,7 @@ impl Workspace {
                         _ => buffer.push(i),
                     };
                 }
+
                 1 => {
                     if buffer != "" {
                         result.push(buffer);
@@ -369,16 +394,20 @@ impl Workspace {
                     }
                     status = 0
                 }
+
                 2 => match i {
                     '"' => status = 0,
                     '\\' => status = 3,
                     _ => buffer.push(i),
                 },
+
                 3 => {
+                    buffer.push(i);
                     status = 0;
                 }
                 _ => {}
             }
+
         }
         result
     }
