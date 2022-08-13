@@ -8,6 +8,7 @@ use json::{JsonValue, object};
 pub struct Samples {
     config: JsonValue,
     config_file_path: String,
+    iter_counter: usize,
 }
 
 #[allow(dead_code)]
@@ -43,7 +44,7 @@ impl Samples {
             }
         };
 
-        Self { config: jsoned_content, config_file_path: String::from(filename) }
+        Self { config: jsoned_content, config_file_path: String::from(filename), iter_counter: 0 }
 
     }
 
@@ -149,11 +150,17 @@ impl Samples {
     fn read_from_pathbuf(&self, pthbuf: &PathBuf) -> String {
         let mut buffer = String::new();
         match File::open(pthbuf) {
-            Ok(_) => {
-                buffer
+            Ok(mut file) => {
+                match file.read_to_string(&mut buffer) {
+                    Ok(_) => buffer,
+                    Err(err) => {
+                        eprintln!("Error reading {}: {err}", pthbuf.to_str().unwrap());
+                        exit(-1);
+                    }
+                }
             }
             Err(err) => {
-                eprintln!("Error reading {}: {err}", pthbuf.to_str().unwrap());
+                eprintln!("Error opening {}: {err}", pthbuf.to_str().unwrap());
                 exit(-1);
             }
         }
@@ -176,6 +183,8 @@ impl Samples {
         // Read contents
         let infile_content = self.read_from_pathbuf(&infile_pathbuf);
         let outfile_content = self.read_from_pathbuf(&outfile_pathbuf);
+
+        Some((infile_content, String::from(outfile_content.trim())))
     }
 
 }
@@ -184,6 +193,15 @@ impl Iterator for Samples {
     type Item = (String, String);
 
     fn next(&mut self) -> Option<Self::Item> {
-        todo!()
+        match self.get(self.iter_counter) {
+            Some(value) => {
+                self.iter_counter += 1;
+                Some(value)
+            },
+            None => {
+                self.iter_counter = 0;
+                None
+            }
+        }
     }
 }
