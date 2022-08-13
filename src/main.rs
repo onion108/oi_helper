@@ -69,7 +69,7 @@ enum OIHelperCommands {
         maxl: String,
 
         /// Determine if enable the debug kit.
-        #[clap(short='d', long, default_value_t)]
+        #[clap(short='d', long)]
         debug_kit: bool,
     },
 
