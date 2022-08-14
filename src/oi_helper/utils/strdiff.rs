@@ -56,7 +56,8 @@ pub fn colored_diff(original: &str, target: &str) -> (Vec<StyledContent<String>>
 
             // Color the remaining parts.
             while last_counter < original_chars.len() {
-                format!(" ").on_red().bold();
+                result_target.push(format!(" ").on_red().bold());
+                result_original.push(format!("{}", original_chars[last_counter]).green());
                 last_counter += 1;
             }
         }
