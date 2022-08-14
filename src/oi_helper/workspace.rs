@@ -4,7 +4,8 @@ use std::{
     fs::{self, File, OpenOptions},
     io::{stdin, Read, Write},
     path::{Path, PathBuf},
-    process::{exit, Command, Stdio}, time::Duration,
+    process::{exit, Command, Stdio},
+    time::Duration,
 };
 
 use crossterm::style::Stylize;
@@ -23,9 +24,7 @@ pub struct Workspace {
 
 #[allow(dead_code)]
 impl Workspace {
-
     fn get_default_config(&self) -> JsonValue {
-
         // The default configuration, if the configuration doesn't exist.
         let builtin_default = object! {
             "initialzed": "true",
@@ -33,12 +32,11 @@ impl Workspace {
             "cc_flags": "-std=c++11 -O2 -Wall -xc++ ",
             "cc_template": "temp0",
             "cc_default_extension": "cc",
-            "cc_compiler": "g++", 
+            "cc_compiler": "g++",
         };
 
         // If the configuration directory exists
         if let Some(p) = &self.global_config {
-
             // Construct a path to the global.json
             let pth = Path::new(&p);
             let mut pth_buf = pth.to_path_buf();
@@ -46,14 +44,11 @@ impl Workspace {
 
             // Check if the file exists
             if !pth_buf.as_path().exists() {
-
                 // If not, create a new file
                 let mut f = File::create(&pth_buf.as_path()).unwrap();
                 f.write_all(builtin_default.dump().as_bytes()).unwrap();
                 builtin_default
-
             } else {
-
                 // Otherwise, read the file OR update the default file.
                 let mut f = File::open(&pth_buf.as_path()).unwrap();
                 let mut buffer = String::new();
@@ -62,7 +57,6 @@ impl Workspace {
 
                 // Check the version
                 if ccfg["oi_helper_version"].to_string() != crate::VERSION {
-
                     // The global.json is from an older version
                     let mut mccfg = ccfg.clone();
 
@@ -84,7 +78,6 @@ impl Workspace {
                     ccfg
                 }
             }
-
         } else {
             builtin_default
         }
@@ -101,14 +94,22 @@ impl Workspace {
             let mut f = File::create(&pth_buf.as_path()).unwrap();
             f.write_all(cfg.dump().as_bytes()).unwrap();
         } else {
-            eprintln!("{}", "[Error] Cannot edit the global configuration file.".bold().red());
+            eprintln!(
+                "{}",
+                "[Error] Cannot edit the global configuration file."
+                    .bold()
+                    .red()
+            );
             exit(-1);
         }
     }
 
     /// Create from path.
     pub fn create(path: &PathBuf, global_cfg: &Option<String>) -> Self {
-        let result = Self { config: JsonValue::Null, global_config: global_cfg.clone() };
+        let result = Self {
+            config: JsonValue::Null,
+            global_config: global_cfg.clone(),
+        };
         let default_workspace_file = result.get_default_config();
         let mut cfg_path = path.clone();
 
@@ -134,11 +135,16 @@ impl Workspace {
                 let mut f =
                     File::create(&cfg_file).expect("cannot create the workspace file. stopped.");
                 match f.write_all(default_workspace_file.dump().as_bytes()) {
-                    Ok(_) => {},
+                    Ok(_) => {}
                     Err(err) => {
-                        eprintln!("{}", format!("Cannot write to the workspace file: {}", err).bold().red());
+                        eprintln!(
+                            "{}",
+                            format!("Cannot write to the workspace file: {}", err)
+                                .bold()
+                                .red()
+                        );
                         exit(-1);
-                    },
+                    }
                 }
             } else {
                 exit(-1);
@@ -163,7 +169,12 @@ impl Workspace {
             Ok(_) => {}
             Err(err) => {
                 eprintln!("cannot read workspace file: {}", err);
-                eprintln!("{}{}{}", "[HINT] Have you ran ".bold().yellow(), "oi_helper init".bold().cyan(), " yet? ".bold().yellow());
+                eprintln!(
+                    "{}{}{}",
+                    "[HINT] Have you ran ".bold().yellow(),
+                    "oi_helper init".bold().cyan(),
+                    " yet? ".bold().yellow()
+                );
                 exit(-1);
             }
         }
@@ -196,10 +207,20 @@ impl Workspace {
                 }
             } else {
                 if self.config.has_key("__unsafe_updating") {
-                    if let Some(uu) =  self.config["__unsafe_updating"].as_bool() {
+                    if let Some(uu) = self.config["__unsafe_updating"].as_bool() {
                         if uu {
-                            eprintln!("{}", "[WARNING] Running in an unsafe updated workspace. ".bold().yellow());
-                            eprintln!("{}{}{}", "[HINT] Use ".bold().yellow(), "oi_helper update".bold().cyan(), " to update the workspace safely. ".bold().yellow())
+                            eprintln!(
+                                "{}",
+                                "[WARNING] Running in an unsafe updated workspace. "
+                                    .bold()
+                                    .yellow()
+                            );
+                            eprintln!(
+                                "{}{}{}",
+                                "[HINT] Use ".bold().yellow(),
+                                "oi_helper update".bold().cyan(),
+                                " to update the workspace safely. ".bold().yellow()
+                            )
                         }
                     }
                 }
@@ -236,14 +257,20 @@ impl Workspace {
         } else {
             String::from(name) + "." + self.config["cc_default_extension"].to_string().as_str()
         };
-        let mut file =
-            match File::create(Path::new(&real_name)) {
-                Ok(file) => file,
-                Err(_) => {
-                    eprintln!("{}", format!("Failed to create the C++ source file. Please check your configuration.").bold().red());
-                    exit(-1);
-                }
-            };
+        let mut file = match File::create(Path::new(&real_name)) {
+            Ok(file) => file,
+            Err(_) => {
+                eprintln!(
+                    "{}",
+                    format!(
+                        "Failed to create the C++ source file. Please check your configuration."
+                    )
+                    .bold()
+                    .red()
+                );
+                exit(-1);
+            }
+        };
         let template_scheme_obj = self.config["cc_template"].to_string();
         let mut buffer = String::new();
         let template_scheme = template_scheme_obj.as_str();
@@ -253,54 +280,60 @@ impl Workspace {
             "dp" => match template_scheme {
                 "temp1" => resource::CPP_DP_TEMPLATE_0.trim_start(),
                 "temp0" | _ => resource::CPP_DP_TEMPLATE_1.trim_end(),
-            }
+            },
             "default" => match template_scheme {
                 "temp1" => resource::CPP_TEMPLATE_1.trim_start(),
                 "temp0" | _ => resource::CPP_TEMPLATE_0.trim_start(),
-            }
+            },
             "dp-2d" => match template_scheme {
                 "temp1" => resource::CPP_DP_2D_TEMPLATE_1.trim_start(),
                 "temp0" | _ => resource::CPP_DP_2D_TEMPLATE_0.trim_start(),
-            }
+            },
             _ => {
                 // Try to treat the template name as a path to the template file.
                 if let Ok(mut f) = File::open(&Path::new(template)) {
-
                     // Try to read it.
                     match f.read_to_string(&mut buffer) {
-                        Ok(_) => {},
+                        Ok(_) => {}
                         Err(err) => {
-                            eprintln!("Failed to read template file {} due to error: {}", template, err);
+                            eprintln!(
+                                "Failed to read template file {} due to error: {}",
+                                template, err
+                            );
                             exit(-1);
-                        },
+                        }
                     }
                     buffer.as_str()
-
                 } else {
                     // All tryings were failed. Tell the user about that.
                     eprintln!("Invalid template: {}", template);
-                    eprintln!("{}", "Usable tempaltes: dp, default, [path/to/template]".bold().yellow());
+                    eprintln!(
+                        "{}",
+                        "Usable tempaltes: dp, default, [path/to/template]"
+                            .bold()
+                            .yellow()
+                    );
                     exit(-1);
                 }
             }
         };
-        
+
         // Fill in all the placeholders and write.
         file.write_all(
-        template
-            .replace("{##}", name)
-            .replace("{#maxn_value#}", maxn)
-            .replace("{#debug_kit#}", {
-                if debug_kit {
-                    resource::CPP_TEMPLATE_DEBUG_KIT
-                } else {
-                    ""
-                }
-            })
-            .replace("{#maxl_value#}", maxl)
-            .as_bytes()
+            template
+                .replace("{##}", name)
+                .replace("{#maxn_value#}", maxn)
+                .replace("{#debug_kit#}", {
+                    if debug_kit {
+                        resource::CPP_TEMPLATE_DEBUG_KIT
+                    } else {
+                        ""
+                    }
+                })
+                .replace("{#maxl_value#}", maxl)
+                .as_bytes(),
         )
-            .unwrap();
+        .unwrap();
     }
 
     fn compile_cpp(&self, real_name: &str, executable_name: &str, use_debug: bool) {
@@ -345,9 +378,14 @@ impl Workspace {
         // Check if the old build target is already built and haven't been removed yet.
         if Path::new(executable_name).exists() {
             match fs::remove_file(Path::new(executable_name)) {
-                Ok(_) => {} 
+                Ok(_) => {}
                 Err(err) => {
-                    eprintln!("{}", format!("failed to clean the old built target:{}", err).bold().red());
+                    eprintln!(
+                        "{}",
+                        format!("failed to clean the old built target:{}", err)
+                            .bold()
+                            .red()
+                    );
                     exit(-1);
                 }
             }
@@ -369,16 +407,13 @@ impl Workspace {
     }
 
     fn parse_args(&self) -> Vec<String> {
-
         let mut result = Vec::<String>::new();
         let mut buffer = String::new();
         let source = self.config["cc_flags"].to_string();
         let mut status = 0;
 
         for i in source.chars() {
-
             match status {
-
                 0 => {
                     match i {
                         ' ' => status = 1,
@@ -414,7 +449,6 @@ impl Workspace {
                 }
                 _ => {}
             }
-
         }
         result
     }
@@ -422,27 +456,47 @@ impl Workspace {
     /// Display the info of a workspace.
     pub fn display_info(&self) {
         if self.config.has_key("oi_helper_version") {
-            println!("Current Workspace's OI Helper Version (oi_helper_version): {} {}", self.config["oi_helper_version"].to_string(), if self.config.has_key("__unsafe_updating") {
-                if let Some(uu) = self.config["__unsafe_updating"].as_bool() {
-                    if uu { "UNSAFE UPDATED".yellow().bold() } else { "".stylize() }
+            println!(
+                "Current Workspace's OI Helper Version (oi_helper_version): {} {}",
+                self.config["oi_helper_version"].to_string(),
+                if self.config.has_key("__unsafe_updating") {
+                    if let Some(uu) = self.config["__unsafe_updating"].as_bool() {
+                        if uu {
+                            "UNSAFE UPDATED".yellow().bold()
+                        } else {
+                            "".stylize()
+                        }
+                    } else {
+                        "MAYBE BROKEN".red().bold()
+                    }
                 } else {
-                    "MAYBE BROKEN".red().bold()
+                    "".reset()
                 }
-            } else {
-                "".reset()
-            });
+            );
         }
         if self.config.has_key("cc_flags") {
-            println!("Current C++ Compiler Flags (cc_flags): {}", self.config["cc_flags"].to_string());
+            println!(
+                "Current C++ Compiler Flags (cc_flags): {}",
+                self.config["cc_flags"].to_string()
+            );
         }
         if self.config.has_key("cc_template") {
-            println!("Current Template Theme (cc_template): {}", self.config["cc_template"].to_string());
+            println!(
+                "Current Template Theme (cc_template): {}",
+                self.config["cc_template"].to_string()
+            );
         }
         if self.config.has_key("cc_default_extension") {
-            println!("Current C++ Extension (cc_default_extension): {}", self.config["cc_default_extension"].to_string());
+            println!(
+                "Current C++ Extension (cc_default_extension): {}",
+                self.config["cc_default_extension"].to_string()
+            );
         }
         if self.config.has_key("cc_compiler") {
-            println!("Current C++ Compiler (cc_compiler): {}", self.config["cc_compiler"].to_string());
+            println!(
+                "Current C++ Compiler (cc_compiler): {}",
+                self.config["cc_compiler"].to_string()
+            );
         }
     }
 
@@ -476,9 +530,14 @@ impl Workspace {
         // Check if the old build target is already built and haven't been removed yet.
         if Path::new(executable_name).exists() {
             match fs::remove_file(Path::new(executable_name)) {
-                Ok(_) => {} 
+                Ok(_) => {}
                 Err(err) => {
-                    eprintln!("{}", format!("failed to clean the old built target:{}", err).bold().red());
+                    eprintln!(
+                        "{}",
+                        format!("failed to clean the old built target:{}", err)
+                            .bold()
+                            .red()
+                    );
                     exit(-1);
                 }
             }
@@ -497,77 +556,116 @@ impl Workspace {
             let timeout = Duration::from_millis(i.timeout as u64);
             let points = i.points;
 
-            let mut in_file = match OpenOptions::new().write(true).read(true).truncate(true).create(true).open(temp_in) {
+            let mut in_file = match OpenOptions::new()
+                .write(true)
+                .read(true)
+                .truncate(true)
+                .create(true)
+                .open(temp_in)
+            {
                 Ok(file) => file,
                 Err(err) => {
-                    eprintln!("{}", format!("Error running sample group #{group_id}: {err}").bold().red());
+                    eprintln!(
+                        "{}",
+                        format!("Error running sample group #{group_id}: {err}")
+                            .bold()
+                            .red()
+                    );
                     exit(-1);
                 }
             };
             match write!(in_file, "{}", i.expected_in) {
                 Ok(_) => {}
                 Err(err) => {
-                    eprintln!("{}", format!("Error running sample group #{group_id}: {err}").bold().red());
+                    eprintln!(
+                        "{}",
+                        format!("Error running sample group #{group_id}: {err}")
+                            .bold()
+                            .red()
+                    );
                     exit(-1);
                 }
             }
             if crate::is_debug() {
-                println!("[DEBUG] Write {} to {}.", i.expected_in, temp_in.to_str().unwrap());
+                println!(
+                    "[DEBUG] Write {} to {}.",
+                    i.expected_in,
+                    temp_in.to_str().unwrap()
+                );
             }
 
             in_file = match File::open(temp_in) {
                 Ok(file) => file,
                 Err(err) => {
-                    eprintln!("{}", format!("Error running sample group #{group_id}: {err}"));
+                    eprintln!(
+                        "{}",
+                        format!("Error running sample group #{group_id}: {err}")
+                    );
                     exit(-1);
                 }
             };
-
 
             // FIXME - Timeout didn't work.
             // Spawn the child process.
             let mut child = match Command::new(format!("./{}", executable_name))
                 .stdin(in_file)
                 .stdout(Stdio::piped())
-                .spawn() {
+                .spawn()
+            {
                 Ok(c) => c,
                 Err(err) => {
-                    eprintln!("{}", format!("Error running sample group #{}: {err}", group_id).bold().red());
+                    eprintln!(
+                        "{}",
+                        format!("Error running sample group #{}: {err}", group_id)
+                            .bold()
+                            .red()
+                    );
                     exit(-1);
                 }
             };
             match child.wait_timeout(timeout) {
-                Ok(_) => {
+                Ok(is_timeout) => {
+                    match is_timeout {
+                        Some(_) => {
+                            // Read the result output.
+                            let mut _tmp0 = child.wait_with_output().unwrap();
+                            let content = String::from_utf8_lossy(&_tmp0.stdout[..]);
 
-                    // Read the result output.
-                    let mut _tmp0 = child.wait_with_output().unwrap();
-                    let content = String::from_utf8_lossy(&_tmp0.stdout[..]);
-
-                    // Check and compare the results.
-                    if content.trim() == i.expected_out {
-                        eprintln!("{}", format!("Test #{group_id} passed: AC({})", i.points).green());
-                        total_points += points;
-                    } else {
-                        let colored_diffs = utils::strdiff::colored_diff(&i.expected_out, content.trim());
-                        eprintln!("{}", format!("Test #{group_id} failed: WA(0)").red());
-                        eprintln!("");
-                        eprintln!("Expected: ");
-                        // eprintln!("{}", i.expected_out.on_black());
-                        for i in colored_diffs.0 {
-                            eprint!("{}", i);
+                            // Check and compare the results.
+                            if content.trim() == i.expected_out {
+                                eprintln!(
+                                    "{}",
+                                    format!("Test #{group_id} passed: AC({})", i.points).green()
+                                );
+                                total_points += points;
+                            } else {
+                                let colored_diffs =
+                                    utils::strdiff::colored_diff(&i.expected_out, content.trim());
+                                eprintln!("{}", format!("Test #{group_id} failed: WA(0)").red());
+                                eprintln!("");
+                                eprintln!("Expected: ");
+                                // eprintln!("{}", i.expected_out.on_black());
+                                for i in colored_diffs.0 {
+                                    eprint!("{}", i);
+                                }
+                                eprintln!();
+                                eprintln!("Actually: ");
+                                // eprintln!("{}", content.trim().on_red());
+                                for i in colored_diffs.1 {
+                                    eprint!("{}", i);
+                                }
+                                eprintln!();
+                                eprintln!("================================================");
+                                eprintln!("Sample in: ");
+                                eprintln!("{}", i.expected_in);
+                            }
                         }
-                        eprintln!();
-                        eprintln!("Actually: ");
-                        // eprintln!("{}", content.trim().on_red());
-                        for i in colored_diffs.1 {
-                            eprint!("{}", i);
+                        None => {
+                            child.kill().unwrap();
+                            eprintln!("{}", format!("Test #{group_id} failed: TLE(0)").red());
                         }
-                        eprintln!();
-                        eprintln!("================================================");
-                        eprintln!("Sample in: ");
-                        eprintln!("{}", i.expected_in);
                     }
-                },
+                }
                 Err(_) => {
                     child.kill().unwrap();
                     eprintln!("{}", format!("Test #{group_id} failed: TLE(0)").red());
@@ -582,5 +680,4 @@ impl Workspace {
         fs::remove_file(Path::new(&format!("./{}", executable_name))).unwrap();
         fs::remove_file(temp_in).unwrap();
     }
-
 }
