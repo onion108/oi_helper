@@ -125,7 +125,6 @@ impl Samples {
             }
         };
 
-        // TODO: Create sample files.
         let in_file_path_buf = parent_dir.join(&format!("{}.in", next_no));
         let out_file_path_buf = parent_dir.join(&format!("{}.out", next_no));
 

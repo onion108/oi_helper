@@ -11,6 +11,8 @@ use crossterm::style::Stylize;
 use json::{object, JsonValue};
 use wait_timeout::ChildExt;
 
+use crate::oi_helper::utils;
+
 use super::{resource, samples::Samples};
 
 /// The workspace model.
@@ -500,6 +502,7 @@ impl Workspace {
         let mut total_points = 0_u32;
         let mut group_id = 0;
         let temp_in = Path::new("tkejhowiuyoiuwoiub_in.bakabaka.in.txt");
+        // Iterates over each test cases
         for i in sample_group {
             eprintln!("Testing test #{group_id}...");
             let timeout = Duration::from_millis(i.timeout as u64);
@@ -532,6 +535,7 @@ impl Workspace {
             };
 
 
+            // FIXME - Timeout didn't work.
             // Spawn the child process.
             let mut child = match Command::new(format!("./{}", executable_name))
                 .stdin(in_file)
@@ -555,12 +559,21 @@ impl Workspace {
                         eprintln!("{}", format!("Test #{group_id} passed: AC({})", i.points).green());
                         total_points += points;
                     } else {
+                        let colored_diffs = utils::strdiff::colored_diff(&i.expected_out, content.trim());
                         eprintln!("{}", format!("Test #{group_id} failed: WA(0)").red());
                         eprintln!("");
                         eprintln!("Expected: ");
-                        eprintln!("{}", i.expected_out.on_black());
+                        // eprintln!("{}", i.expected_out.on_black());
+                        for i in colored_diffs.0 {
+                            eprint!("{}", i);
+                        }
+                        eprintln!();
                         eprintln!("Actually: ");
-                        eprintln!("{}", content.trim().on_red());
+                        // eprintln!("{}", content.trim().on_red());
+                        for i in colored_diffs.1 {
+                            eprint!("{}", i);
+                        }
+                        eprintln!();
                         eprintln!("================================================");
                         eprintln!("Sample in: ");
                         eprintln!("{}", i.expected_in);

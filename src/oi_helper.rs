@@ -10,6 +10,7 @@ mod workspace;
 mod resource;
 mod samples;
 mod samples_cli;
+mod utils;
 
 
 /// The main model of the OI Helper.
