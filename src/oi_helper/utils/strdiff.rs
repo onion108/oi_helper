@@ -27,7 +27,7 @@ pub fn colored_diff(original: &str, target: &str) -> (Vec<StyledContent<String>>
             // The target is longer.
             let mut last_counter = 0;
             for i in 0..original_chars.len() {
-                last_counter = i;
+                last_counter = i+1;
                 result_original.push(format!("{}", original_chars[i]).green());
                 result_target.push(if original_chars[i] == target_chars[i] {
                     format!("{}", target_chars[i]).green()
@@ -45,7 +45,7 @@ pub fn colored_diff(original: &str, target: &str) -> (Vec<StyledContent<String>>
             // The original is longer.
             let mut last_counter = 0;
             for i in 0..target_chars.len() {
-                last_counter = i;
+                last_counter = i+1;
                 result_original.push(format!("{}", original_chars[i]).green());
                 result_target.push(if original_chars[i] == target_chars[i] {
                     format!("{}", target_chars[i]).green()
