@@ -303,6 +303,32 @@ impl Workspace {
             .unwrap();
     }
 
+    fn compile_cpp(&self, real_name: &str, executable_name: &str, use_debug: bool) {
+        match Command::new(self.config["cc_compiler"].to_string().as_str())
+            .args(self.parse_args())
+            .arg(format!("-o"))
+            .arg(format!("{}", executable_name))
+            .arg({
+                if use_debug {
+                    "-D__DEBUG__"
+                } else {
+                    ""
+                }
+            })
+            .arg("--")
+            .arg(real_name)
+            .status()
+        {
+            Ok(_) => {
+                println!("{}", "Compiled. ".bold().green());
+            }
+            Err(_) => {
+                eprintln!("Failed to compile the program. Stopped. (CE(0))");
+                exit(-1);
+            }
+        }
+    }
+
     /// Run a C++ source file.
     pub fn run_cpp(&self, name: &str, use_debug: bool) {
         // Get the real name.
@@ -328,29 +354,7 @@ impl Workspace {
         }
 
         // Compile the target.
-        match Command::new(self.config["cc_compiler"].to_string().as_str())
-            .args(self.parse_args())
-            .arg(format!("-o"))
-            .arg(format!("{}", executable_name))
-            .arg({
-                if use_debug {
-                    "-D__DEBUG__"
-                } else {
-                    ""
-                }
-            })
-            .arg("--")
-            .arg(&real_name)
-            .status()
-        {
-            Ok(_) => {
-                println!("{}", "Compiled. ".bold().green());
-            }
-            Err(_) => {
-                eprintln!("Failed to compile the program. Stopped. (CE(0))");
-                exit(-1);
-            }
-        }
+        self.compile_cpp(&real_name, executable_name, use_debug);
 
         // Run the target.
         match Command::new(format!("./{}", executable_name)).status() {
@@ -481,22 +485,7 @@ impl Workspace {
         }
 
         // Compile the target.
-        match Command::new(self.config["cc_compiler"].to_string().as_str())
-            .args(self.parse_args())
-            .arg(format!("-o"))
-            .arg(format!("{}", executable_name))
-            .arg("--")
-            .arg(&real_name)
-            .status()
-        {
-            Ok(_) => {
-                println!("{}", "Compiled. ".bold().green());
-            }
-            Err(_) => {
-                eprintln!("Failed to compile the program. Stopped. (CE(0))");
-                exit(-1);
-            }
-        }
+        self.compile_cpp(&real_name, executable_name, false);
 
         // Run the tests
         let mut total_points = 0_u32;
