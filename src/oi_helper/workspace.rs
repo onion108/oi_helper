@@ -169,7 +169,15 @@ impl Workspace {
 
     /// Initialize from file.
     pub fn from_file(path: &Path, global_cfg: &Option<String>) -> Self {
-        let mut file = File::open(path).expect("cannot find workspace config. stopped. \nHint: Have you executed `oi_helper init` or are you in the root directory of the workspace?");
+        // let mut file = File::open(path).expect("cannot find workspace config. stopped. \nHint: Have you executed `oi_helper init` or are you in the root directory of the workspace?");
+        let mut file = match File::open(path) {
+            Ok(file) => file,
+            Err(err) => {
+                eprintln!("{}", "Cannot find workspace's configuration file. Stopped. ".red());
+                eprintln!("{}{}{}", "[HINT] Have you executed ".yellow().bold(), "oi_helper init".cyan().bold(), " or are you in the root directory of the workspace? ".bold().yellow());
+                exit(-1);
+            }
+        };
         let mut file_content = String::new();
         match file.read_to_string(&mut file_content) {
             Ok(_) => {}
@@ -203,17 +211,24 @@ impl Workspace {
                 eprintln!("{}", "[HINT] You can use `oi_helper update` to update your workspace to the newest version safely.".bold().yellow());
                 let mut u_c = String::new();
                 stdin().read_line(&mut u_c).unwrap();
+
+                // Unsafely update the workspace.
                 if u_c.trim().to_uppercase() == "Y" {
                     self.config["oi_helper_version"] =
                         JsonValue::String(String::from(crate::VERSION));
                     self.config["__unsafe_updating"] = JsonValue::Boolean(true);
                     self.save_config(Path::new(p));
                 } else {
+                    // Just exit the program if the user didn't want to load the workspace.
+                    // Maybe they'll update the workspace in a safe way later.
                     exit(-1);
                 }
             } else {
+
+                // Check if the workspace is unsafe.
                 if self.config.has_key("__unsafe_updating") {
                     if let Some(uu) = self.config["__unsafe_updating"].as_bool() {
+                        // It's true!
                         if uu {
                             eprintln!(
                                 "{}",
@@ -230,8 +245,10 @@ impl Workspace {
                         }
                     }
                 }
+                // Otherwise, it's must be safe and the newest
             }
         } else {
+            // Cannot get the version, which means it's broken.
             eprintln!(
                 "{} The workspace config is broken or not in the correct format. Stopped.",
                 "[ERROR]".red().bold()
