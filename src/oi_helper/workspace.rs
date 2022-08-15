@@ -118,11 +118,17 @@ impl Workspace {
 
         if !cfg_file.exists() {
             let mut f =
-                File::create(&cfg_file).expect("cannot create the workspace file. stopped.");
+                match File::create(&cfg_file) {
+                    Ok(file) => file,
+                    Err(err) => {
+                        eprintln!("{}", format!("Cannot create workspace file: {}", err).bold().red());
+                        exit(-1);
+                    }
+                };
             match f.write_all(default_workspace_file.dump().as_bytes()) {
                 Ok(_) => {}
                 Err(err) => {
-                    eprintln!("Cannot write to workspace file: {}", err);
+                    eprintln!("{}", format!("Cannot write to workspace file: {}", err).bold().red());
                     exit(-1);
                 }
             }
