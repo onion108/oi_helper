@@ -625,6 +625,8 @@ impl Workspace {
             match child.wait_timeout(timeout) {
                 Ok(is_timeout) => {
                     match is_timeout {
+
+                        // Didn't time out.
                         Some(_) => {
                             // Read the result output.
                             let mut _tmp0 = child.wait_with_output().unwrap();
@@ -659,6 +661,8 @@ impl Workspace {
                                 eprintln!("{}", i.expected_in);
                             }
                         }
+
+                        // Timeout.
                         None => {
                             child.kill().unwrap();
                             eprintln!("{}", format!("Test #{group_id} failed: TLE(0)").red());
