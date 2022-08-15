@@ -45,8 +45,13 @@ cargo install --path .
 ```
 If it builds, you will now have the `devpreview` version instead of your normal release.
 
+There are another way to install `devpreview`s, that is using `cargo install oi_helper` and add `--version` and pass the version number to it (e.g., `cargo install oi_helper --version 2.0.0-1-devpreview` will install the second stable devpreview). `devpreview`s that can install in this way are called **stable `devpreview`s**.
+
 Current `devpreview`'s features:
 - Added test cases.
+
+Current `devpreview`'s todo:
+- [ ] Add result comparations.
 
 ## Usage Documentation
 
