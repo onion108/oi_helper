@@ -605,7 +605,6 @@ impl Workspace {
                 }
             };
 
-            // FIXME - Timeout didn't work.
             // Spawn the child process.
             let mut child = match Command::new(format!("./{}", executable_name))
                 .stdin(in_file)
