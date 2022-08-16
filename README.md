@@ -48,7 +48,8 @@ If it builds, you will now have the `devpreview` version instead of your normal 
 There are another way to install `devpreview`s, that is using `cargo install oi_helper` and add `--version` and pass the version number to it (e.g., `cargo install oi_helper --version 2.0.0-1-devpreview` will install the second stable devpreview). `devpreview`s that can be installed in this way are called **stable `devpreview`s**.
 
 Current `devpreview`'s features:
-- Added test cases.
+- Added local test cases pending. (Currently supports `AC`, `WA` and `TLE`. )
+- Added experimental support for fetching example test cases from Luogu with given problem id.
 
 Current `devpreview`'s todo:
 - [ ] Add result comparations.
