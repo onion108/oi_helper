@@ -42,6 +42,7 @@ pub fn get_luogu_problem_content(problem_id: &str) -> Dom {
 }
 
 #[allow(unused_doc_comments)]
+/// Search from the Node n.
 fn search_from(n: &Node) -> Option<Vec<(String, String)>> {
 
     // Store the test cases.
@@ -52,6 +53,7 @@ fn search_from(n: &Node) -> Option<Vec<(String, String)>> {
 
         Some(el) => {
 
+            // Started to parse.
             let mut buffer = (String::new(), String::new());
 
             /**
@@ -70,16 +72,18 @@ fn search_from(n: &Node) -> Option<Vec<(String, String)>> {
                     0 => {
                         match i.element() {
                             Some(el) => {
+                                // Check if it's before a input test-case.
                                 if el.name == "h3" && el.children.len() != 0 && el.children[0].text().is_some() && el.children[0].text().unwrap().starts_with("输入样例") {
                                     next_type = 1;
                                     continue;
                                 }
+                                // Check if it's before a output test-case.
                                 if el.name == "h3" && el.children.len() != 0 && el.children[0].text().is_some() && el.children[0].text().unwrap().starts_with("输出样例") {
                                     next_type = 2;
                                     continue;
                                 }
 
-                                // Otherwise, search its children.
+                                // Otherwise, search its children, and merge the result.
                                 if let Some(cases) = search_from(i) {
                                     for i in cases {
                                         test_cases.push(i);
@@ -93,6 +97,8 @@ fn search_from(n: &Node) -> Option<Vec<(String, String)>> {
                     // Reading in-case
                     1 => {
                         match i.element() {
+                            // Checking the relationships between them.
+                            // There SHOULD be no problem.
                             Some(el) => {
                                 if el.name == "pre" && el.children.len() != 0 {
                                     if let Some(c) = el.children[0].element() {
@@ -113,12 +119,14 @@ fn search_from(n: &Node) -> Option<Vec<(String, String)>> {
 
                     // Read the out-case
                     2 => {
+                        // The same as 1.
                         match i.element() {
                             Some(el) => {
                                 if el.name == "pre" && el.children.len() != 0 {
                                     if let Some(c) = el.children[0].element() {
                                         if c.name == "code" {
                                             if let Some(s) = el.children[0].element().unwrap().children[0].text() {
+                                                // Update it.
                                                 buffer.1 = String::from(s.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&"));
                                                 test_cases.push(buffer);
                                                 buffer = (String::new(), String::new());
