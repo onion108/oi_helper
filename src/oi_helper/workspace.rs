@@ -116,6 +116,7 @@ impl Workspace {
         cfg_path.push("oi_ws.json");
         let cfg_file = cfg_path.as_path();
 
+        // Check if the configuration exists.
         if !cfg_file.exists() {
             let mut f =
                 match File::create(&cfg_file) {
@@ -133,6 +134,8 @@ impl Workspace {
                 }
             }
         } else {
+
+            // Let the user choose if they want to override the existed workspace file.
             eprintln!("{} The workspace configuration file already exists. Are you sure to override it? [Y/{}]", "[WARNING]".bold().yellow(), "N".bold().blue());
             let mut choice = String::new();
             std::io::stdin().read_line(&mut choice).unwrap();
