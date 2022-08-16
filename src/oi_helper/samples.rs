@@ -223,6 +223,11 @@ impl Samples {
         })
     }
 
+    /// Load the samples from Luogu with a specified problem id
+    pub fn load_sample(&mut self, problem_id: &str) {
+        
+    }
+
 }
 
 impl Iterator for Samples {
