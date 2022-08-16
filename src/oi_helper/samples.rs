@@ -5,6 +5,8 @@ use std::{path::{Path, PathBuf}, fs::{File, OpenOptions}, process::exit, io::{Re
 use crossterm::style::Stylize;
 use json::{JsonValue, object};
 
+use super::utils::web::{get_luogu_problem_content, get_test_case_from_luogu_tree};
+
 pub struct Samples {
     config: JsonValue,
     config_file_path: String,
@@ -115,7 +117,7 @@ impl Samples {
     }
 
     /// Create a sample.
-    pub fn create_sample(&mut self, points: u32, timeout: u32, mem_limit: u32) {
+    pub fn create_sample(&mut self, points: u32, timeout: u32, mem_limit: u32) -> i32 {
         self.check_config();
         let next_no = self.config["sample_list"].len();
         let parent_dir = match Path::new(&self.config_file_path).parent() {
@@ -157,6 +159,8 @@ impl Samples {
 
         // Save the configuration.
         self.save();
+
+        next_no as i32
     }
 
     fn read_from_pathbuf(&self, pthbuf: &PathBuf) -> String {
@@ -224,8 +228,48 @@ impl Samples {
     }
 
     /// Load the samples from Luogu with a specified problem id
-    pub fn load_sample(&mut self, problem_id: &str) {
-        
+    pub fn load_sample_from_luogu(&mut self, problem_id: &str) {
+        let samples = get_test_case_from_luogu_tree(&get_luogu_problem_content(problem_id));
+        let each_point = 100 / (samples.len() as u32);
+        for case in samples {
+            let number = self.create_sample(each_point, 1000, 256);
+
+            let in_path = Path::new(&self.config_file_path).parent().unwrap().join(&format!("{}.in", number));
+            let out_path = Path::new(&self.config_file_path).parent().unwrap().join(&format!("{}.out", number));
+
+            let mut in_file = match OpenOptions::new().write(true).truncate(true).open(&in_path) {
+                Ok(f) => f,
+                Err(err) => {
+                    eprintln!("{}", format!("Error while opening sample from {}: {}", in_path.to_str().unwrap_or("undefined"), err).bold().red());
+                    exit(-1);
+                }
+            };
+
+            let mut out_file = match OpenOptions::new().write(true).truncate(true).open(&out_path) {
+                Ok(f) => f,
+                Err(err) => {
+                    eprintln!("{}", format!("Error while opening sample from {}: {}", out_path.to_str().unwrap_or("undefined"), err).bold().red());
+                    exit(-1);
+                }
+            };
+
+            match write!(&mut in_file, "{}", case.0) {
+                Ok(_) => {}
+                Err(err) => {
+                    eprintln!("{}", format!("Error while writing sample: {}", err));
+                    exit(-1);
+                }
+            }
+
+            match write!(&mut out_file, "{}", case.1) {
+                Ok(_) => {}
+                Err(err) => {
+                    eprintln!("{}", format!("Error while writing sample: {}", err));
+                    exit(-1);
+                }
+            }
+
+        }
     }
 
 }

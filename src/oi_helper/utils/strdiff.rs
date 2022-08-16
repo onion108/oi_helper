@@ -1,7 +1,5 @@
 //! This file contains some utility functions that will output the difference between two strings.
 
-use std::fmt::Display;
-
 use crossterm::style::{Stylize, StyledContent};
 
 pub fn colored_diff(original: &str, target: &str) -> (Vec<StyledContent<String>>, Vec<StyledContent<String>>) {

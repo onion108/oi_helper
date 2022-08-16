@@ -48,6 +48,19 @@ pub enum SamplesSubcommand {
 
     },
 
+    /// Fetch example I/O groups from Luogu.
+    Lgfetch {
+
+        /// The name of fetched case.
+        #[clap()]
+        name: String,
+
+        /// The problem id
+        #[clap()]
+        problem_id: String,
+
+    },
+
 }
 
 /// Subcommands

@@ -172,7 +172,7 @@ impl Workspace {
         // let mut file = File::open(path).expect("cannot find workspace config. stopped. \nHint: Have you executed `oi_helper init` or are you in the root directory of the workspace?");
         let mut file = match File::open(path) {
             Ok(file) => file,
-            Err(err) => {
+            Err(_) => {
                 eprintln!("{}", "Cannot find workspace's configuration file. Stopped. ".red());
                 eprintln!("{}{}{}", "[HINT] Have you executed ".yellow().bold(), "oi_helper init".cyan().bold(), " or are you in the root directory of the workspace? ".bold().yellow());
                 exit(-1);

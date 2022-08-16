@@ -160,16 +160,3 @@ pub fn get_test_case_from_luogu_tree(dom: &Dom) -> Vec::<(String, String)> {
     }
     test_cases
 }
-
-mod test {
-    use crate::oi_helper::utils::web::{get_luogu_problem_content, get_test_case_from_luogu_tree};
-
-    use super::get_remotely;
-
-    #[test]
-    fn test0() {
-        let content = get_luogu_problem_content("P1001");
-        let content = get_luogu_problem_content("P1237");
-        println!("P1102 Cases: {:?}", get_test_case_from_luogu_tree(&content));
-    }
-}
