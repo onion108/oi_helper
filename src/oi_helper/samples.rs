@@ -229,10 +229,18 @@ impl Samples {
 
     /// Load the samples from Luogu with a specified problem id
     pub fn load_sample_from_luogu(&mut self, problem_id: &str) {
+
+        eprintln!("Starting fetching samples from {}... ", problem_id);
+
         let samples = get_test_case_from_luogu_tree(&get_luogu_problem_content(problem_id));
         let each_point = 100 / (samples.len() as u32);
+
+        eprintln!("Content fetched. Loading {} sample(s)... ", samples.len());
+
         for case in samples {
+
             let number = self.create_sample(each_point, 1000, 256);
+            eprintln!("Loading sample #{number}... ");
 
             let in_path = Path::new(&self.config_file_path).parent().unwrap().join(&format!("{}.in", number));
             let out_path = Path::new(&self.config_file_path).parent().unwrap().join(&format!("{}.out", number));
@@ -269,7 +277,12 @@ impl Samples {
                 }
             }
 
+            eprintln!("Loaded sample #{number}. ");
+
         }
+
+        eprintln!("Fetching done. ");
+
     }
 
 }
