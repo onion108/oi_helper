@@ -105,7 +105,7 @@ impl Workspace {
     }
 
     /// Create from path.
-    pub fn create(path: &PathBuf, global_cfg: &Option<String>) -> Self {
+    pub fn create(path: &PathBuf, global_cfg: &Option<String>) -> Result<Self, Option<String>> {
         let result = Self {
             config: JsonValue::Null,
             global_config: global_cfg.clone(),
@@ -122,15 +122,13 @@ impl Workspace {
                 match File::create(&cfg_file) {
                     Ok(file) => file,
                     Err(err) => {
-                        eprintln!("{}", format!("Cannot create workspace file: {}", err).bold().red());
-                        exit(-1);
+                        return Err(Some(format!("Cannot create workspace file: {}", err)));
                     }
                 };
             match f.write_all(default_workspace_file.dump().as_bytes()) {
                 Ok(_) => {}
                 Err(err) => {
-                    eprintln!("{}", format!("Cannot write to workspace file: {}", err).bold().red());
-                    exit(-1);
+                    return Err(Some(format!("Cannot write to workspace file: {}", err)));
                 }
             }
         } else {
@@ -146,20 +144,14 @@ impl Workspace {
                 match f.write_all(default_workspace_file.dump().as_bytes()) {
                     Ok(_) => {}
                     Err(err) => {
-                        eprintln!(
-                            "{}",
-                            format!("Cannot write to the workspace file: {}", err)
-                                .bold()
-                                .red()
-                        );
-                        exit(-1);
+                        return Err(Some(format!("Cannot write to the workspace file: {}", err)));
                     }
                 }
             } else {
-                exit(-1);
+                return Err(None)
             }
         }
-        Self::from_json(default_workspace_file, global_cfg)
+        Ok(Self::from_json(default_workspace_file, global_cfg))
     }
 
     /// Initialize from json.
@@ -171,14 +163,14 @@ impl Workspace {
     }
 
     /// Initialize from file.
-    pub fn from_file(path: &Path, global_cfg: &Option<String>) -> Self {
+    pub fn from_file(path: &Path, global_cfg: &Option<String>) -> Result<Self, Option<String>> {
         // let mut file = File::open(path).expect("cannot find workspace config. stopped. \nHint: Have you executed `oi_helper init` or are you in the root directory of the workspace?");
         let mut file = match File::open(path) {
             Ok(file) => file,
             Err(_) => {
                 eprintln!("{}", "Cannot find workspace's configuration file. Stopped. ".red());
                 eprintln!("{}{}{}", "[HINT] Have you executed ".yellow().bold(), "oi_helper init".cyan().bold(), " or are you in the root directory of the workspace? ".bold().yellow());
-                exit(-1);
+                return Err(None); // Return none here because we need to display custom error messages.
             }
         };
         let mut file_content = String::new();
@@ -192,13 +184,13 @@ impl Workspace {
                     "oi_helper init".bold().cyan(),
                     " yet? ".bold().yellow()
                 );
-                exit(-1);
+                return Err(None);
             }
         }
-        return Self::from_json(
+        return Ok(Self::from_json(
             json::parse(&file_content).expect("the oi_ws.json is not a valid json file. stopped."),
             global_cfg,
-        );
+        ));
     }
 
     /// Check the version of the workspace.

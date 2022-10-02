@@ -1,6 +1,7 @@
 //! The entry file of the CLI.
 
 use clap::{Parser, Subcommand};
+use crossterm::style::Stylize;
 
 mod oi_helper;
 
@@ -181,5 +182,12 @@ fn main() {
     let args = OIHelperCli::parse();
     let mut app = oi_helper::OIHelper::new(args);
     app.config();
-    app.run();
+    match app.run() {
+        Ok(_) => {},
+        Err(msg) => {
+            if let Some(msg) = msg {
+                println!("{}", format!("Error: {}", msg).bold().red());
+            }
+        }
+    }
 }
