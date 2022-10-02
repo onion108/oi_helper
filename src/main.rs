@@ -9,7 +9,7 @@ mod oi_helper;
 
 /// The version of the command-line tool.
 pub static VERSION: &str = env!("CARGO_PKG_VERSION");
-pub static DEBUG: bool = true;
+pub static DEBUG: bool = false;
 
 pub fn is_debug() -> bool {
     match std::env::var("APP_DEBUG") {
