@@ -1,6 +1,6 @@
 [package]
 name = "oi_helper"
-version = "0.1.5"
+version = "2.0.0"
 edition = "2021"
 authors = ["27Onion <zzy20080201@qq.com>"]
 license = "GPL-2.0"
@@ -13,5 +13,8 @@ description = "A useful tool for C++ competive programming."
 [dependencies]
 clap = { version = "3.0", features = ["derive"] }
 json = "^0.12.0"
-crossterm = "^0.24.0"
+crossterm = "0.25.0"
 home = "^0.5.0"
+wait-timeout = "0.2.0"
+reqwest = { version = "0.11.11", features = ["blocking"] }
+html_parser = "0.6.3"

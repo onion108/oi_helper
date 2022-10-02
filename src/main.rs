@@ -7,9 +7,66 @@ mod oi_helper;
 /// The version of the command-line tool.
 pub static VERSION: &str = env!("CARGO_PKG_VERSION");
 
+pub fn is_debug() -> bool {
+    match std::env::var("APP_DEBUG") {
+        Ok(s) => s.trim().to_uppercase() == "YES",
+        Err(_) => false,
+    }
+}
+
+/// Subcommands for the sample.
+#[derive(Subcommand)]
+pub enum SamplesSubcommand {
+
+    /// Initialize a new samples group for a source file.
+    Init {
+
+        /// The name of the source file without the extension.
+        #[clap()]
+        name: String,
+
+    },
+
+    /// Create a sample,
+    Create {
+
+        /// The name of the source file without the extension.
+        #[clap()]
+        name: String,
+
+        /// The timeout of the sample.
+        #[clap(long, value_parser, default_value_t = 1000)]
+        timeout: u32,
+
+        /// The memory limit.
+        #[clap(long, value_parser, default_value_t = 256)]
+        memory_limit: u32,
+        
+        /// The points
+        #[clap(long, value_parser, default_value_t = 10)]
+        points: u32,
+
+    },
+
+    /// Fetch example I/O groups from Luogu.
+    Lgfetch {
+
+        /// The name of fetched case.
+        #[clap()]
+        name: String,
+
+        /// The problem id
+        #[clap()]
+        problem_id: String,
+
+    },
+
+}
+
 /// Subcommands
 #[derive(Subcommand)]
 enum OIHelperCommands {
+
     /// Check the version
     Checkver {
         /// The path to the workspace to check.
@@ -89,6 +146,24 @@ enum OIHelperCommands {
 
     /// Update the workspace to the newest oi_helper version.
     Update,
+
+    /// Edit the sample group.
+    Samples {
+        #[clap(subcommand)]
+        subcommand: SamplesSubcommand,
+    },
+
+    /// Run the sample group on a target.
+    Test {
+        /// The file name without extension.
+        #[clap()]
+        target: String,
+
+        /// The path-to-samples-directory (without .smpd extension). If not specified, it will be the same as the target.
+        #[clap(short='s', long)]
+        samples_pack: Option<String>, 
+    },
+
 }
 
 /// A helper for C++ competive programmers (a.k.a. OIers).
