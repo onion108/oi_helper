@@ -63,13 +63,13 @@ impl OIHelper {
             OIHelperCommands::Create { name , template , maxn , maxl, debug_kit } => {
                 let mut workspace = Workspace::from_file(Path::new("./oi_ws.json"), &self.global_config_path.clone())?;
                 workspace.check_version("./oi_ws.json")?;
-                workspace.create_cpp(name, template, maxn, maxl, *debug_kit);
+                workspace.create_cpp(name, template, maxn, maxl, *debug_kit)?;
             },
 
             OIHelperCommands::Run { name, debug } => {
                 let mut workspace = Workspace::from_file(Path::new("./oi_ws.json"), &self.global_config_path.clone())?;
                 workspace.check_version("./oi_ws.json")?;
-                workspace.run_cpp(name, *debug);
+                workspace.run_cpp(name, *debug)?;
             },
 
             OIHelperCommands::Info => {
@@ -85,7 +85,7 @@ impl OIHelper {
 
             OIHelperCommands::GlobalConfig { key, value } => {
                 let mut workspace = Workspace::from_file(Path::new("./oi_ws.json"), &self.global_config_path.clone())?;
-                workspace.set_g_config(key, value);
+                workspace.set_g_config(key, value)?;
             },
 
             OIHelperCommands::Samples { subcommand } => {
@@ -105,7 +105,7 @@ impl OIHelper {
                 }
                 let path_to_sampledir = Path::new(&path_to_sampledir_str);
                 let mut samples = Samples::from_file(path_to_sampledir.join("samples_info.json").to_str().unwrap());
-                workspace.test(target, &mut samples);
+                workspace.test(target, &mut samples)?;
             }
         }
         Ok(())

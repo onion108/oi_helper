@@ -1,5 +1,7 @@
 //! The entry file of the CLI.
 
+use std::process::ExitCode;
+
 use clap::{Parser, Subcommand};
 use crossterm::style::Stylize;
 
@@ -178,16 +180,17 @@ pub struct OIHelperCli {
 
 }
 
-fn main() {
+fn main() -> ExitCode {
     let args = OIHelperCli::parse();
     let mut app = oi_helper::OIHelper::new(args);
     app.config();
     match app.run() {
-        Ok(_) => {},
+        Ok(_) => ExitCode::SUCCESS,
         Err(msg) => {
             if let Some(msg) = msg {
                 println!("{}", format!("Error: {}", msg).bold().red());
             }
+            ExitCode::FAILURE
         }
     }
 }
