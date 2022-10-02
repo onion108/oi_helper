@@ -51,24 +51,24 @@ impl OIHelper {
             OIHelperCommands::Checkver { path } => {
                 let mut cfg_path = path.clone();
                 cfg_path.push("oi_ws.json");
-                Workspace::from_file(&cfg_path.as_path(), &self.global_config_path.clone())?.check_version("./oi_ws.json");
+                Workspace::from_file(&cfg_path.as_path(), &self.global_config_path.clone())?.check_version("./oi_ws.json")?;
             },
 
             OIHelperCommands::Config { key, value } => {
                 let mut workspace = Workspace::from_file(Path::new("./oi_ws.json"), &self.global_config_path.clone())?;
                 workspace.set_config(key, value);
-                workspace.save_config(Path::new("./oi_ws.json"));
+                workspace.save_config(Path::new("./oi_ws.json"))?;
             },
 
             OIHelperCommands::Create { name , template , maxn , maxl, debug_kit } => {
                 let mut workspace = Workspace::from_file(Path::new("./oi_ws.json"), &self.global_config_path.clone())?;
-                workspace.check_version("./oi_ws.json");
+                workspace.check_version("./oi_ws.json")?;
                 workspace.create_cpp(name, template, maxn, maxl, *debug_kit);
             },
 
             OIHelperCommands::Run { name, debug } => {
                 let mut workspace = Workspace::from_file(Path::new("./oi_ws.json"), &self.global_config_path.clone())?;
-                workspace.check_version("./oi_ws.json");
+                workspace.check_version("./oi_ws.json")?;
                 workspace.run_cpp(name, *debug);
             },
 
@@ -80,7 +80,7 @@ impl OIHelper {
             OIHelperCommands::Update => {
                 let mut workspace = Workspace::from_file(Path::new("./oi_ws.json"), &self.global_config_path.clone())?;
                 workspace.update();
-                workspace.save_config(&Path::new("./oi_ws.json"));
+                workspace.save_config(&Path::new("./oi_ws.json"))?;
             },
 
             OIHelperCommands::GlobalConfig { key, value } => {
@@ -90,13 +90,13 @@ impl OIHelper {
 
             OIHelperCommands::Samples { subcommand } => {
                 let mut workspace = Workspace::from_file(Path::new("./oi_ws.json"), &self.global_config_path.clone())?;
-                workspace.check_version("./oi_ws.json");
+                workspace.check_version("./oi_ws.json")?;
                 samples_cli::samples(&mut workspace, subcommand)
             },
 
             OIHelperCommands::Test { target, samples_pack } => {
                 let mut workspace = Workspace::from_file(Path::new("./oi_ws.json"), &self.global_config_path.clone())?;
-                workspace.check_version("./oi_ws.json");
+                workspace.check_version("./oi_ws.json")?;
                 let path_to_sampledir_str;
                 if let Some(pack) = samples_pack {
                     path_to_sampledir_str = format!("./{}.smpd", pack.to_owned());

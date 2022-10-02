@@ -194,7 +194,7 @@ impl Workspace {
     }
 
     /// Check the version of the workspace.
-    pub fn check_version(&mut self, p: &str) {
+    pub fn check_version(&mut self, p: &str) -> Result<(), Option<String>> {
         // If have this key.
         if self.config.has_key("oi_helper_version") {
             // Get the version string.
@@ -216,7 +216,7 @@ impl Workspace {
                 } else {
                     // Just exit the program if the user didn't want to load the workspace.
                     // Maybe they'll update the workspace in a safe way later.
-                    exit(-1);
+                    return Err(None);
                 }
             } else {
 
@@ -236,7 +236,7 @@ impl Workspace {
                                 "[HINT] Use ".bold().yellow(),
                                 "oi_helper update".bold().cyan(),
                                 " to update the workspace safely. ".bold().yellow()
-                            )
+                            );
                         }
                     }
                 }
@@ -244,12 +244,9 @@ impl Workspace {
             }
         } else {
             // Cannot get the version, which means it's broken.
-            eprintln!(
-                "{} The workspace config is broken or not in the correct format. Stopped.",
-                "[ERROR]".red().bold()
-            );
-            exit(-1);
+            return Err(Some(String::from("The workspace config is broken or not in the correct format. Stopped.")));
         }
+        Ok(())
     }
 
     /// Set the configuration.
@@ -258,13 +255,18 @@ impl Workspace {
     }
 
     /// Save the configuration.
-    pub fn save_config(&self, path: &Path) {
-        let mut file = OpenOptions::new()
+    pub fn save_config(&self, path: &Path) -> Result<(), Option<String>> {
+        let mut file = match OpenOptions::new()
             .write(true)
             .truncate(true)
-            .open(path)
-            .expect("error: unable to save workspace config");
+            .open(path) {
+                Ok(f) => f,
+                Err(err) => {
+                    return Err(Some(format!("Cannot save configuration file: {err}")));
+                }
+            };
         file.write_all(self.config.dump().as_bytes()).unwrap();
+        Ok(())
     }
 
     /// Create a new C++ source file.
