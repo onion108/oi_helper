@@ -1,16 +1,28 @@
 //! The entry file of the CLI.
 
+use std::process::ExitCode;
+
 use clap::{Parser, Subcommand};
+use crossterm::style::Stylize;
 
 mod oi_helper;
 
 /// The version of the command-line tool.
 pub static VERSION: &str = env!("CARGO_PKG_VERSION");
+pub static DEBUG: bool = false;
 
 pub fn is_debug() -> bool {
     match std::env::var("APP_DEBUG") {
         Ok(s) => s.trim().to_uppercase() == "YES",
         Err(_) => false,
+    }
+}
+
+pub struct MemoryLeakTracer;
+
+impl Drop for MemoryLeakTracer {
+    fn drop(&mut self) {
+        println!("No memory leak. ");
     }
 }
 
@@ -177,9 +189,22 @@ pub struct OIHelperCli {
 
 }
 
-fn main() {
+#[allow(unused_assignments)]
+fn main() -> ExitCode {
+    let _watcher;
+    if DEBUG {
+        _watcher = MemoryLeakTracer;
+    }
     let args = OIHelperCli::parse();
     let mut app = oi_helper::OIHelper::new(args);
     app.config();
-    app.run();
+    match app.run() {
+        Ok(_) => ExitCode::SUCCESS,
+        Err(msg) => {
+            if let Some(msg) = msg {
+                println!("{}", format!("Error: {}", msg).bold().red());
+            }
+            ExitCode::FAILURE
+        }
+    }
 }
