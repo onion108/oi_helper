@@ -315,6 +315,7 @@ impl Workspace {
                 "temp1" => resource::CPP_DP_2D_TEMPLATE_1.trim_start(),
                 "temp0" | _ => resource::CPP_DP_2D_TEMPLATE_0.trim_start(),
             },
+            "empty" => "",
             _ => {
                 // Try to treat the template name as a path to the template file.
                 if let Ok(mut f) = File::open(&Path::new(template)) {
@@ -335,7 +336,7 @@ impl Workspace {
                     eprintln!("Invalid template: {}", template);
                     eprintln!(
                         "{}",
-                        "Usable tempaltes: dp, default, [path/to/template]"
+                        "Usable tempaltes: dp, default, dp-2d, empty, [path/to/template]"
                             .bold()
                             .yellow()
                     );
