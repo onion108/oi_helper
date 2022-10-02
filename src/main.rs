@@ -158,6 +158,10 @@ enum OIHelperCommands {
         /// The file name without extension.
         #[clap()]
         target: String,
+
+        /// The path-to-samples-directory (without .smpd extension). If not specified, it will be the same as the target.
+        #[clap(short='s', long)]
+        samples_pack: Option<String>, 
     },
 
 }
