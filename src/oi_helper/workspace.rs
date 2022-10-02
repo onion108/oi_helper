@@ -4,7 +4,7 @@ use std::{
     fs::{self, File, OpenOptions},
     io::{stdin, Read, Write},
     path::{Path, PathBuf},
-    process::{exit, Command, Stdio},
+    process::{Command, Stdio},
     time::Duration,
 };
 
@@ -563,7 +563,8 @@ impl Workspace {
         let mut group_id = 0;
         let temp_in = Path::new("tkejhowiuyoiuwoiub_in.bakabaka.in.txt");
         // Iterates over each test cases
-        for i in sample_group {
+        for sample in sample_group {
+            let i = sample?;
             eprintln!("Testing test #{group_id}...");
             let timeout = Duration::from_millis(i.timeout as u64);
             let points = i.points;

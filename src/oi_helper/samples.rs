@@ -1,8 +1,7 @@
 //! This file contains functions and data types for processing samples.
 
-use std::{path::{Path, PathBuf}, fs::{File, OpenOptions}, process::exit, io::{Read, Write}};
+use std::{path::{Path, PathBuf}, fs::{File, OpenOptions}, io::{Read, Write}};
 
-use crossterm::style::Stylize;
 use json::{JsonValue, object};
 
 use super::utils::web::{get_luogu_problem_content, get_test_case_from_luogu_tree};
@@ -25,14 +24,13 @@ pub struct SampleInfo {
 #[allow(dead_code)]
 impl Samples {
     /// Construct from a file. `filename` is the path to the configuration file, i.e., `samples_info.json`
-    pub fn from_file(filename: &str) -> Self {
+    pub fn from_file(filename: &str) -> Result<Self, Option<String>> {
 
         let path = Path::new(filename);
         let mut file = match File::open(path) {
             Ok(file) => file,
             Err(err) => {
-                eprintln!("{}", format!("Cannot read configuration file: {}", err).bold().red());
-                exit(-1);
+                return Err(Some(format!("Cannot read configuration file: {}", err)));
             }
         };
 
@@ -41,8 +39,7 @@ impl Samples {
         match file.read_to_string(&mut buffer) {
             Ok(_) => {}
             Err(err) => {
-                eprintln!("{}", format!("Cannot read configuration file: {}", err).bold().red());
-                exit(-1);
+                return Err(Some(format!("Cannot read configuration file: {}", err)));
             }
         }
         
@@ -50,12 +47,11 @@ impl Samples {
         let jsoned_content = match json::parse(&buffer) {
             Ok(obj) => obj,
             Err(err) => {
-                eprintln!("{}", format!("Cannot read configuration file: {}", err).bold().red());
-                exit(-1);
+                return Err(Some(format!("Cannot read configuration file: {}", err)));
             }
         };
 
-        Self { config: jsoned_content, config_file_path: String::from(filename), iter_counter: 0 }
+        Ok(Self { config: jsoned_content, config_file_path: String::from(filename), iter_counter: 0 })
 
     }
 
@@ -66,7 +62,7 @@ impl Samples {
     }
 
     /// Create a sample configuration.
-    pub fn create(filename: &str) {
+    pub fn create(filename: &str) -> Result<(), Option<String>> {
         if crate::is_debug() {
             println!("[DEBUG] Creating with (filename = {filename})");
         }
@@ -74,8 +70,7 @@ impl Samples {
         let mut file = match File::create(path) {
             Ok(file) => file,
             Err(err) => {
-                eprintln!("{}", format!("Cannot create configuration file: {}", err).bold().red());
-                exit(-1);
+                return Err(Some(format!("Cannot create configuration file: {}", err)));
             }
         };
         
@@ -83,42 +78,43 @@ impl Samples {
         let default_config = Self::get_default_config();
 
         match write!(&mut file, "{}", default_config.dump()) {
-            Ok(_) => {}
+            Ok(_) => {
+                Ok(())
+            }
             Err(err) => {
-                eprintln!("{}", format!("Cannot write to the configuration file: {}", err).bold().red());
-                exit(-1);
+                Err(Some(format!("Cannot write to the configuration file: {}", err)))
             }
         }
     }
 
     /// Save the configuration.
-    fn save(&self) {
+    fn save(&self) -> Result<(), Option<String>> {
         let mut file = match OpenOptions::new().truncate(true).write(true).open(&Path::new(&self.config_file_path)) {
             Ok(file) => file,
             Err(err) => {
-                eprintln!("{}", format!("Cannot open configuration file: {}", err).bold().red());
-                exit(-1);
+                return Err(Some(format!("Cannot open configuration file: {}", err)));
             }
         };
         match write!(&mut file, "{}", self.config.dump()) {
-            Ok(_) => {}
+            Ok(_) => {
+                Ok(())
+            }
             Err(err) => {
-                eprintln!("{}", format!("Cannot write to the configuration file: {}", err).bold().red());
-                exit(-1);
+                return Err(Some(format!("Cannot write to the configuration file: {}", err)));
             }
         }
     }
 
-    fn check_config(&self) {
+    fn check_config(&self) -> Result<(), Option<String>> {
         if !(self.config.has_key("sample_list") && self.config["sample_list"].is_array()) {
-            eprintln!("{}", format!("The configuration of the sample list is broken. Please check the samples_info.json.").red().bold());
-            exit(-1);
+            return Err(Some(format!("The configuration of the sample list is broken. Please check the samples_info.json.")))
         }
+        Ok(())
     }
 
     /// Create a sample.
-    pub fn create_sample(&mut self, points: u32, timeout: u32, mem_limit: u32) -> i32 {
-        self.check_config();
+    pub fn create_sample(&mut self, points: u32, timeout: u32, mem_limit: u32) -> Result<i32, Option<String>> {
+        self.check_config()?;
         let next_no = self.config["sample_list"].len();
         let parent_dir = match Path::new(&self.config_file_path).parent() {
             Some(p) => p,
@@ -133,16 +129,14 @@ impl Samples {
         match File::create(in_file_path_buf.as_path()) {
             Ok(_) => {}
             Err(err) => {
-                eprintln!("{}", format!("Error creating sample #{next_no}: {err}").bold().red());
-                exit(-1);
+                return Err(Some(format!("Error creating sample #{next_no}: {err}")));
             }
         }
 
         match File::create(out_file_path_buf.as_path()) {
             Ok(_) => {}
             Err(err) => {
-                eprintln!("{}", format!("Error creating sample #{next_no}: {err}").bold().red());
-                exit(-1);
+                return Err(Some(format!("Error creating sample #{next_no}: {err}")));
             }
         }
 
@@ -158,35 +152,33 @@ impl Samples {
         }).unwrap();
 
         // Save the configuration.
-        self.save();
+        self.save()?;
 
-        next_no as i32
+        Ok(next_no as i32)
     }
 
-    fn read_from_pathbuf(&self, pthbuf: &PathBuf) -> String {
+    fn read_from_pathbuf(&self, pthbuf: &PathBuf) -> Result<String, Option<String>> {
         let mut buffer = String::new();
         match File::open(pthbuf) {
             Ok(mut file) => {
                 match file.read_to_string(&mut buffer) {
-                    Ok(_) => buffer,
+                    Ok(_) => Ok(buffer),
                     Err(err) => {
-                        eprintln!("Error reading {}: {err}", pthbuf.to_str().unwrap());
-                        exit(-1);
+                        return Err(Some(format!("Error reading {}: {err}", pthbuf.to_str().unwrap())))
                     }
                 }
             }
             Err(err) => {
-                eprintln!("Error opening {}: {err}", pthbuf.to_str().unwrap());
-                exit(-1);
+                return Err(Some(format!("Error reading {}: {err}", pthbuf.to_str().unwrap())));
             }
         }
     }
 
     /// Get in-out for a sample with index.
-    fn get(&self, idx: usize) -> Option<SampleInfo> {
-        self.check_config();
+    fn get(&self, idx: usize) -> Result<Option<SampleInfo>, Option<String>> {
+        self.check_config()?;
         if idx >= self.config["sample_list"].len() {
-            return None;
+            return Ok(None);
         }
         let infile_name = self.config["sample_list"][idx]["in_file"].to_string();
         let outfile_name = self.config["sample_list"][idx]["out_file"].to_string();
@@ -197,38 +189,35 @@ impl Samples {
         let outfile_pathbuf = parent.join(outfile_name);
         
         // Read contents
-        let infile_content = self.read_from_pathbuf(&infile_pathbuf);
-        let outfile_content = self.read_from_pathbuf(&outfile_pathbuf);
+        let infile_content = self.read_from_pathbuf(&infile_pathbuf)?;
+        let outfile_content = self.read_from_pathbuf(&outfile_pathbuf)?;
 
-        Some(SampleInfo {
+        Ok(Some(SampleInfo {
             expected_in: infile_content,
             expected_out: outfile_content,
             timeout: match self.config["sample_list"][idx]["timeout_ms"].as_u32() {
                 Some(timeout) => timeout,
                 None => {
-                    eprintln!("{}", format!("Error reading sample: invalid timeout value. ").bold().red());
-                    exit(-1);
+                    return Err(Some(format!("Error reading sample: invalid timeout value. ")));
                 }
             },
             memory_limit: match self.config["sample_list"][idx]["memory_limit"].as_u32() {
                 Some(timeout) => timeout,
                 None => {
-                    eprintln!("{}", format!("Error reading sample: invalid memory_limit value. ").bold().red());
-                    exit(-1);
+                    return Err(Some(format!("Error reading sample: invalid memory_limit value. ")));
                 }
             },
             points: match self.config["sample_list"][idx]["points"].as_u32() {
                 Some(timeout) => timeout,
                 None => {
-                    eprintln!("{}", format!("Error reading sample: invalid points value. ").bold().red());
-                    exit(-1);
+                    return Err(Some(format!("Error reading sample: invalid points value. ")));
                 }
             },
-        })
+        }))
     }
 
     /// Load the samples from Luogu with a specified problem id
-    pub fn load_sample_from_luogu(&mut self, problem_id: &str) {
+    pub fn load_sample_from_luogu(&mut self, problem_id: &str) -> Result<(), Option<String>> {
 
         eprintln!("Starting fetching samples from {}... ", problem_id);
 
@@ -239,7 +228,7 @@ impl Samples {
 
         for case in samples {
 
-            let number = self.create_sample(each_point, 1000, 256);
+            let number = self.create_sample(each_point, 1000, 256)?;
             eprintln!("Loading sample #{number}... ");
 
             let in_path = Path::new(&self.config_file_path).parent().unwrap().join(&format!("{}.in", number));
@@ -248,32 +237,28 @@ impl Samples {
             let mut in_file = match OpenOptions::new().write(true).truncate(true).open(&in_path) {
                 Ok(f) => f,
                 Err(err) => {
-                    eprintln!("{}", format!("Error while opening sample from {}: {}", in_path.to_str().unwrap_or("undefined"), err).bold().red());
-                    exit(-1);
+                    return Err(Some(format!("Error while opening sample from {}: {}", in_path.to_str().unwrap_or("undefined"), err)));
                 }
             };
 
             let mut out_file = match OpenOptions::new().write(true).truncate(true).open(&out_path) {
                 Ok(f) => f,
                 Err(err) => {
-                    eprintln!("{}", format!("Error while opening sample from {}: {}", out_path.to_str().unwrap_or("undefined"), err).bold().red());
-                    exit(-1);
+                    return Err(Some(format!("Error while opening sample from {}: {}", out_path.to_str().unwrap_or("undefined"), err)));
                 }
             };
 
             match write!(&mut in_file, "{}", case.0) {
                 Ok(_) => {}
                 Err(err) => {
-                    eprintln!("{}", format!("Error while writing sample: {}", err));
-                    exit(-1);
+                    return Err(Some(format!("Error while writing sample: {}", err)));
                 }
             }
 
             match write!(&mut out_file, "{}", case.1) {
                 Ok(_) => {}
                 Err(err) => {
-                    eprintln!("{}", format!("Error while writing sample: {}", err));
-                    exit(-1);
+                    return Err(Some(format!("Error while writing sample: {}", err)));
                 }
             }
 
@@ -282,24 +267,28 @@ impl Samples {
         }
 
         eprintln!("Fetching done. ");
+        Ok(())
 
     }
 
 }
 
 impl Iterator for Samples {
-    type Item = SampleInfo;
+    type Item = Result<SampleInfo, Option<String>>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.get(self.iter_counter) {
-            Some(value) => {
-                self.iter_counter += 1;
-                Some(value)
+            Ok(value) => match value {
+                Some(value) => {
+                    self.iter_counter += 1;
+                    Some(Ok(value))
+                },
+                None => {
+                    self.iter_counter = 0;
+                    None
+                }
             },
-            None => {
-                self.iter_counter = 0;
-                None
-            }
+            Err(err) => Some(Err(err)),
         }
     }
 }
