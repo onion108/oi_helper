@@ -221,7 +221,10 @@ impl Samples {
 
         eprintln!("Starting fetching samples from {}... ", problem_id);
 
-        let samples = get_test_case_from_luogu_tree(&get_luogu_problem_content(problem_id));
+        let samples = get_test_case_from_luogu_tree(&(match get_luogu_problem_content(problem_id) {
+            Ok(o) => o,
+            Err(err) => return Err(Some(format!("Error occured while fetching samples: {}", err)))
+        }));
         let each_point = 100 / (samples.len() as u32);
 
         eprintln!("Content fetched. Loading {} sample(s)... ", samples.len());

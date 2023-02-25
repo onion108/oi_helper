@@ -1,44 +1,25 @@
-use std::{process::exit, io::Read};
+use std::io::Read;
 
-use crossterm::style::Stylize;
 use html_parser::{Dom, Node};
 
 
-pub fn get_remotely(url: &str) -> String {
-    let mut res = match reqwest::blocking::get(url) {
-        Ok(res) => res,
-        Err(err) => {
-            eprintln!("{}", format!("Cannot get content of {}: {}", url, err).bold().red());
-            exit(-1);
-        }
-    };
+pub fn get_remotely(url: &str) -> anyhow::Result<String> {
+    let mut res = reqwest::blocking::get(url)?;
     let mut body = String::new();
-    match res.read_to_string(&mut body) {
-        Ok(_) => {},
-        Err(err) => {
-            eprintln!("{}", format!("Cannot get content of {}: {}", url, err).bold().red());
-            exit(-1);
-        }
-    }
+    res.read_to_string(&mut body)?;
     if crate::is_debug() {
         println!("Got content from {}", url);
         println!("Status: {}", res.status());
         println!("Headers: \n{:#?}", res.headers());
         println!("Body: \n{}", body);
     }
-    body
+    Ok(body)
 }
 
-pub fn get_luogu_problem_content(problem_id: &str) -> Dom {
-    let content = get_remotely(&format!("https://www.luogu.com.cn/problem/{}", problem_id));
-    let dom_tree = match Dom::parse(&content) {
-        Ok(dom) => dom,
-        Err(err) => {
-            eprintln!("{}", format!("Error while parsing data from {}: {}", format!("https://www.luogu.com.cn/problem/{}", problem_id), err));
-            exit(-1);
-        }
-    };
-    dom_tree
+pub fn get_luogu_problem_content(problem_id: &str) -> anyhow::Result<Dom> {
+    let content = get_remotely(&format!("https://www.luogu.com.cn/problem/{}", problem_id))?;
+    let dom_tree = Dom::parse(&content)?;
+    Ok(dom_tree)
 }
 
 #[allow(unused_doc_comments)]

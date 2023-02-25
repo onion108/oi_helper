@@ -94,15 +94,21 @@ impl Workspace {
             let mut f = match File::create(&pth_buf.as_path()) {
                 Ok(f) => f,
                 Err(err) => {
-                    return Err(Some(format!("Error saving global configuration file: {err}")));
+                    return Err(Some(format!(
+                        "Error saving global configuration file: {err}"
+                    )));
                 }
             };
             if let Err(err) = f.write_all(cfg.dump().as_bytes()) {
-                return Err(Some(format!("Error saving global configuration file: {err}")));
+                return Err(Some(format!(
+                    "Error saving global configuration file: {err}"
+                )));
             }
             Ok(())
         } else {
-            Err(Some("Cannot edit the global configuration file.".to_string()))
+            Err(Some(
+                "Cannot edit the global configuration file.".to_string(),
+            ))
         }
     }
 
@@ -120,13 +126,12 @@ impl Workspace {
 
         // Check if the configuration exists.
         if !cfg_file.exists() {
-            let mut f =
-                match File::create(&cfg_file) {
-                    Ok(file) => file,
-                    Err(err) => {
-                        return Err(Some(format!("Cannot create workspace file: {}", err)));
-                    }
-                };
+            let mut f = match File::create(&cfg_file) {
+                Ok(file) => file,
+                Err(err) => {
+                    return Err(Some(format!("Cannot create workspace file: {}", err)));
+                }
+            };
             match f.write_all(default_workspace_file.dump().as_bytes()) {
                 Ok(_) => {}
                 Err(err) => {
@@ -134,7 +139,6 @@ impl Workspace {
                 }
             }
         } else {
-
             // Let the user choose if they want to override the existed workspace file.
             eprintln!("{} The workspace configuration file already exists. Are you sure to override it? [Y/{}]", "[WARNING]".bold().yellow(), "N".bold().blue());
             let mut choice = String::new();
@@ -150,7 +154,7 @@ impl Workspace {
                     }
                 }
             } else {
-                return Err(None)
+                return Err(None);
             }
         }
         Ok(Self::from_json(default_workspace_file, global_cfg))
@@ -170,8 +174,18 @@ impl Workspace {
         let mut file = match File::open(path) {
             Ok(file) => file,
             Err(_) => {
-                eprintln!("{}", "Cannot find workspace's configuration file. Stopped. ".red());
-                eprintln!("{}{}{}", "[HINT] Have you executed ".yellow().bold(), "oi_helper init".cyan().bold(), " or are you in the root directory of the workspace? ".bold().yellow());
+                eprintln!(
+                    "{}",
+                    "Cannot find workspace's configuration file. Stopped. ".red()
+                );
+                eprintln!(
+                    "{}{}{}",
+                    "[HINT] Have you executed ".yellow().bold(),
+                    "oi_helper init".cyan().bold(),
+                    " or are you in the root directory of the workspace? "
+                        .bold()
+                        .yellow()
+                );
                 return Err(None); // Return none here because we need to display custom error messages.
             }
         };
@@ -221,7 +235,6 @@ impl Workspace {
                     return Err(None);
                 }
             } else {
-
                 // Check if the workspace is unsafe.
                 if self.config.has_key("__unsafe_updating") {
                     if let Some(uu) = self.config["__unsafe_updating"].as_bool() {
@@ -246,7 +259,9 @@ impl Workspace {
             }
         } else {
             // Cannot get the version, which means it's broken.
-            return Err(Some(String::from("The workspace config is broken or not in the correct format. Stopped.")));
+            return Err(Some(String::from(
+                "The workspace config is broken or not in the correct format. Stopped.",
+            )));
         }
         Ok(())
     }
@@ -258,21 +273,25 @@ impl Workspace {
 
     /// Save the configuration.
     pub fn save_config(&self, path: &Path) -> Result<(), Option<String>> {
-        let mut file = match OpenOptions::new()
-            .write(true)
-            .truncate(true)
-            .open(path) {
-                Ok(f) => f,
-                Err(err) => {
-                    return Err(Some(format!("Cannot save configuration file: {err}")));
-                }
-            };
+        let mut file = match OpenOptions::new().write(true).truncate(true).open(path) {
+            Ok(f) => f,
+            Err(err) => {
+                return Err(Some(format!("Cannot save configuration file: {err}")));
+            }
+        };
         file.write_all(self.config.dump().as_bytes()).unwrap();
         Ok(())
     }
 
     /// Create a new C++ source file.
-    pub fn create_cpp(&self, name: &str, template: &str, maxn: &str, maxl: &str, debug_kit: bool) -> Result<(), Option<String>> {
+    pub fn create_cpp(
+        &self,
+        name: &str,
+        template: &str,
+        maxn: &str,
+        maxl: &str,
+        debug_kit: bool,
+    ) -> Result<(), Option<String>> {
         let real_name = if name.ends_with(".cpp") && name.ends_with(".cc") && name.ends_with(".cxx")
         {
             String::from(name)
@@ -354,7 +373,12 @@ impl Workspace {
         Ok(())
     }
 
-    fn compile_cpp(&self, real_name: &str, executable_name: &str, use_debug: bool) -> Result<(), Option<String>> {
+    fn compile_cpp(
+        &self,
+        real_name: &str,
+        executable_name: &str,
+        use_debug: bool,
+    ) -> Result<(), Option<String>> {
         match Command::new(self.config["cc_compiler"].to_string().as_str())
             .args(self.parse_args())
             .arg(format!("-o"))
@@ -374,9 +398,9 @@ impl Workspace {
                 println!("{}", "Compiled. ".bold().green());
                 Ok(())
             }
-            Err(_) => {
-                Err(Some(format!("Failed to compile the program. Stopped. (CE(0))")))
-            }
+            Err(_) => Err(Some(format!(
+                "Failed to compile the program. Stopped. (CE(0))"
+            ))),
         }
     }
 
@@ -398,9 +422,10 @@ impl Workspace {
             match fs::remove_file(Path::new(executable_name)) {
                 Ok(_) => {}
                 Err(err) => {
-                    return Err(Some(
-                        format!("failed to clean the old built target: {}", err)
-                    ));
+                    return Err(Some(format!(
+                        "failed to clean the old built target: {}",
+                        err
+                    )));
                 }
             }
         }
@@ -550,7 +575,10 @@ impl Workspace {
             match fs::remove_file(Path::new(executable_name)) {
                 Ok(_) => {}
                 Err(err) => {
-                    return Err(Some(format!("failed to clean the old built target:{}", err)));
+                    return Err(Some(format!(
+                        "failed to clean the old built target:{}",
+                        err
+                    )));
                 }
             }
         }
@@ -578,13 +606,19 @@ impl Workspace {
             {
                 Ok(file) => file,
                 Err(err) => {
-                    return Err(Some(format!("Error running sample group #{}: {err}", group_id)));
+                    return Err(Some(format!(
+                        "Error running sample group #{}: {err}",
+                        group_id
+                    )));
                 }
             };
             match write!(in_file, "{}", i.expected_in) {
                 Ok(_) => {}
                 Err(err) => {
-                    return Err(Some(format!("Error running sample group #{}: {err}", group_id)));
+                    return Err(Some(format!(
+                        "Error running sample group #{}: {err}",
+                        group_id
+                    )));
                 }
             }
             if crate::is_debug() {
@@ -598,7 +632,10 @@ impl Workspace {
             in_file = match File::open(temp_in) {
                 Ok(file) => file,
                 Err(err) => {
-                    return Err(Some(format!("Error running sample group #{}: {err}", group_id)));
+                    return Err(Some(format!(
+                        "Error running sample group #{}: {err}",
+                        group_id
+                    )));
                 }
             };
 
@@ -610,13 +647,15 @@ impl Workspace {
             {
                 Ok(c) => c,
                 Err(err) => {
-                    return Err(Some(format!("Error running sample group #{}: {err}", group_id)));
+                    return Err(Some(format!(
+                        "Error running sample group #{}: {err}",
+                        group_id
+                    )));
                 }
             };
             match child.wait_timeout(timeout) {
                 Ok(is_timeout) => {
                     match is_timeout {
-
                         // Didn't time out.
                         Some(_) => {
                             // Read the result output.
@@ -675,7 +714,9 @@ impl Workspace {
             return Err(Some(format!("Failed to remove built target: {err}")));
         }
         if let Err(err) = fs::remove_file(temp_in) {
-            return Err(Some(format!("Failed to remove temporary input file: {err}")));
+            return Err(Some(format!(
+                "Failed to remove temporary input file: {err}"
+            )));
         }
         Ok(())
     }
