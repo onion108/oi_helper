@@ -1,0 +1,13 @@
+{
+  "lang_name": "简体中文",
+  "lang_id": "zh_CN",
+  "data": {
+    "other.test": "哼，哼，哼呃呃呃呃呃呃啊啊啊啊啊啊",
+    "error.wconfig_not_found": "无法找到工作区的配置文件。",
+    "hint.wconfig_not_found.pref": "你是否执行过了命令 ",
+    "hint.wconfig_not_found.suff": " ，或者你现在是否在工作区配置文件所在的目录中？",
+
+    "prefixes.hint": "[提示]",
+    "prefixes.error": "[错误]"
+  }
+}

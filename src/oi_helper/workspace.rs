@@ -10,6 +10,7 @@ use std::{
 
 use crossterm::style::Stylize;
 use json::{object, JsonValue};
+use localoco::strings::Strings;
 use wait_timeout::ChildExt;
 
 use crate::oi_helper::utils;
@@ -20,6 +21,7 @@ use super::{resource, samples::Samples};
 pub struct Workspace {
     config: JsonValue,
     global_config: Option<String>,
+    global_strings: Strings,
 }
 
 #[allow(dead_code)]
@@ -113,10 +115,11 @@ impl Workspace {
     }
 
     /// Create from path.
-    pub fn create(path: &PathBuf, global_cfg: &Option<String>) -> Result<Self, Option<String>> {
+    pub fn create(path: &PathBuf, global_cfg: &Option<String>, global_strings: &Strings) -> Result<Self, Option<String>> {
         let result = Self {
             config: JsonValue::Null,
             global_config: global_cfg.clone(),
+            global_strings: global_strings.clone(),
         };
         let default_workspace_file = result.get_default_config();
         let mut cfg_path = path.clone();
@@ -157,32 +160,34 @@ impl Workspace {
                 return Err(None);
             }
         }
-        Ok(Self::from_json(default_workspace_file, global_cfg))
+        Ok(Self::from_json(default_workspace_file, global_cfg, global_strings))
     }
 
     /// Initialize from json.
-    pub fn from_json(json: JsonValue, global_cfg: &Option<String>) -> Self {
+    pub fn from_json(json: JsonValue, global_cfg: &Option<String>, global_strings: &Strings) -> Self {
         Self {
             config: json.clone(),
             global_config: global_cfg.clone(),
+            global_strings: global_strings.clone(),
         }
     }
 
     /// Initialize from file.
-    pub fn from_file(path: &Path, global_cfg: &Option<String>) -> Result<Self, Option<String>> {
+    pub fn from_file(path: &Path, global_cfg: &Option<String>, global_strings: &Strings) -> Result<Self, Option<String>> {
         // let mut file = File::open(path).expect("cannot find workspace config. stopped. \nHint: Have you executed `oi_helper init` or are you in the root directory of the workspace?");
         let mut file = match File::open(path) {
             Ok(file) => file,
             Err(_) => {
                 eprintln!(
                     "{}",
-                    "Cannot find workspace's configuration file. Stopped. ".red()
+                    global_strings.translate("error.wconfig_not_found").red()
                 );
                 eprintln!(
-                    "{}{}{}",
-                    "[HINT] Have you executed ".yellow().bold(),
+                    "{} {}{}{}",
+                    global_strings.translate("prefixes.hint").bold().yellow(),
+                    global_strings.translate("hint.wconfig_not_found.pref").yellow().bold(),
                     "oi_helper init".cyan().bold(),
-                    " or are you in the root directory of the workspace? "
+                    global_strings.translate("hint.wconfig_not_found.suff")
                         .bold()
                         .yellow()
                 );
@@ -206,6 +211,7 @@ impl Workspace {
         return Ok(Self::from_json(
             json::parse(&file_content).expect("the oi_ws.json is not a valid json file. stopped."),
             global_cfg,
+            global_strings,
         ));
     }
 

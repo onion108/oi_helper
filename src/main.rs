@@ -197,7 +197,13 @@ fn main() -> ExitCode {
     }
     let args = OIHelperCli::parse();
     let mut app = oi_helper::OIHelper::new(args);
-    app.config();
+    match app.config() {
+        Ok(_) => (),
+        Err(msg) => {
+            println!("{}", format!("Error: {}", msg).bold().red());
+            return ExitCode::FAILURE;
+        }
+    };
     match app.run() {
         Ok(_) => ExitCode::SUCCESS,
         Err(msg) => {

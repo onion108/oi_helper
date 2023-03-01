@@ -1,0 +1,13 @@
+{
+  "lang_name": "English (United States)",
+  "lang_id": "en_US",
+  "data": {
+    "other.test": "Hello World!",
+    "error.wconfig_not_found": "Cannot find workspace's configuration file. Stopped. ",
+    "hint.wconfig_not_found.pref": "Have you executed ",
+    "hint.wconfig_not_found.suff": " or are you in the root directory of the workspace?",
+
+    "prefixes.hint": "[HINT]",
+    "prefixes.error": "[ERROR]"
+  }
+}
